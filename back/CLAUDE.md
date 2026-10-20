@@ -65,6 +65,7 @@ Le fournisseur n'est pas encore choisi (décision ouverte). En attendant :
 
 - Chaîne de connexion `ConnectionStrings:Onygo`. En local elle est dans `appsettings.Development.json` et pointe vers le PostgreSQL Docker (port **5433**). Hors local, elle passe par la variable d'environnement `ConnectionStrings__Onygo`, jamais par le dépôt.
 - Les migrations ne sont **pas** appliquées au démarrage de l'API.
+- Table `DataProtectionKeys` : clés qui chiffrent les jetons Bearer, stockées en base pour survivre aux redéploiements et être partagées entre instances. Elles y sont **en clair** : l'accès à la base doit rester restreint. Les chiffrer avec un certificat (`ProtectKeysWith…`) est à décider avec l'hébergement.
 
 ## Commandes (depuis `back/`)
 

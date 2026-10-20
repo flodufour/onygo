@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Onygo.Api.Infrastructure.Persistence;
 
@@ -14,6 +15,12 @@ public static class AuthSetup
     /// </summary>
     public static IServiceCollection AddOnygoAuth(this IServiceCollection services)
     {
+        // Les jetons sont chiffrés avec ces clés : stockées en base, elles survivent aux redéploiements
+        // et sont partagées entre instances. Sinon chaque redémarrage déconnecterait tout le monde.
+        services.AddDataProtection()
+            .PersistKeysToDbContext<OnygoDbContext>()
+            .SetApplicationName("Onygo");
+
         services
             .AddAuthentication(IdentityConstants.BearerScheme)
             .AddBearerToken(IdentityConstants.BearerScheme);
