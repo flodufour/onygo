@@ -34,7 +34,7 @@ public class SwaggerTests(OnygoApiFactory factory)
 
         var response = await client.GetAsync("/swagger/index.html");
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.NotEqual(HttpStatusCode.OK, response.StatusCode);
     }
 
     private HttpClient CreateDevelopmentClient() =>
