@@ -18,13 +18,16 @@ public sealed class OnygoApiFactory : WebApplicationFactory<Program>, IAsyncLife
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
 
-    /// <summary>Instant vu par l'API pendant les tests : horloge figée au 15 juin 2026, 10 h à Paris.</summary>
-    public static readonly DateTimeOffset Now = new(2026, 6, 15, 10, 0, 0, TimeSpan.FromHours(2));
+    /// <summary>
+    /// Instant vu par l'API pendant les tests : 15 juin 2026, 10 h à Paris. Exprimé en UTC comme la vraie horloge,
+    /// et parce que PostgreSQL refuse d'enregistrer une date avec un autre décalage.
+    /// </summary>
+    public static readonly DateTimeOffset Now = new DateTimeOffset(2026, 6, 15, 10, 0, 0, TimeSpan.FromHours(2)).ToUniversalTime();
 
-    public static readonly DateOnly Today = DateOnly.FromDateTime(Now.DateTime);
+    /// <summary>Date du jour à Paris à l'instant <see cref="Now"/>.</summary>
+    public static readonly DateOnly Today = new(2026, 6, 15);
 
-    // GetUtcNow() doit renvoyer de l'UTC comme la vraie horloge (PostgreSQL refuse un autre décalage).
-    private readonly FakeTimeProvider _clock = new(Now.ToUniversalTime());
+    private readonly FakeTimeProvider _clock = new(Now);
 
     public FakeEmailSender EmailSender { get; } = new();
 
@@ -35,6 +38,16 @@ public sealed class OnygoApiFactory : WebApplicationFactory<Program>, IAsyncLife
         await using var scope = Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<OnygoDbContext>();
         await dbContext.Database.MigrateAsync();
+    }
+
+    /// <summary>
+    /// Accès direct à la base, pour préparer une situation impossible à créer par l'API à l'heure figée des tests
+    /// (activité déjà commencée, candidature d'hier…) ou vérifier ce que l'API ne renvoie pas.
+    /// </summary>
+    public async Task<T> WithDatabaseAsync<T>(Func<OnygoDbContext, Task<T>> action)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        return await action(scope.ServiceProvider.GetRequiredService<OnygoDbContext>());
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)

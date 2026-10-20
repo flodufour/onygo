@@ -32,4 +32,15 @@ public class Activity
     public ActivityStatus Status { get; private set; } = ActivityStatus.Open;
 
     public required DateTimeOffset CreatedAt { get; init; }
+
+    /// <summary>R4 : une acceptation pourvoit l'activité.</summary>
+    public void MarkFilled()
+    {
+        if (Status != ActivityStatus.Open)
+        {
+            throw new InvalidOperationException($"Only an open activity can be filled (current status: {Status}).");
+        }
+
+        Status = ActivityStatus.Filled;
+    }
 }

@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Onygo.Api.Activities;
+using Onygo.Api.Applications;
 using Onygo.Api.Auth;
 using Onygo.Api.Infrastructure.Email;
 using Onygo.Api.Infrastructure.OpenApi;
@@ -53,6 +54,7 @@ app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapProfileEndpoints();
 app.MapActivityEndpoints();
+app.MapApplicationEndpoints();
 app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

@@ -82,7 +82,13 @@ Ces règles sont **implémentées et garanties par l'API**, protégées par des 
 
 Les limites (3 en attente, 5 par jour, 6 h) sont des **constantes métier** définies côté API et reprises dans `@onygo/shared/constants` pour l'affichage.
 
-R1 et R4 sont **sensibles à la concurrence** (deux requêtes simultanées) : elles doivent être protégées par une transaction et un verrou, et testées comme telles.
+R1 et R4 sont **sensibles à la concurrence** (deux requêtes simultanées) : elles doivent être protégées par une transaction et un verrou, et testées comme telles. R6 l'est aussi (même utilisateur, plusieurs requêtes) et suit le même principe.
+
+Précisions :
+- Il faut avoir créé son **profil** pour postuler : l'organisateur trie sur le prénom et l'âge.
+- Le petit mot facultatif fait **200 caractères** au maximum.
+- Toutes les candidatures du jour comptent pour R6, quel que soit leur statut.
+- Après le match, la personne acceptée voit le lieu exact de l'activité (§2.3).
 
 ### 2.5 Feed
 

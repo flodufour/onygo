@@ -13,6 +13,7 @@ back/
 │   ├── Auth/                         # configuration Identity, Bearer, politique de repli
 │   ├── Profiles/                     # profil : entité, règles, validation, routes
 │   ├── Activities/                   # activités : entité, règles, validation, routes
+│   ├── Applications/                 # candidatures : entité, règles R1-R11, routes
 │   ├── Common/                       # outils transverses (ParisCalendar, GeoPoint, UserId())
 │   └── Infrastructure/
 │       ├── Persistence/              # OnygoDbContext et migrations EF Core
@@ -94,17 +95,35 @@ Règles métier : voir `CLAUDE.md` racine §2.3. Table `Activities` (id `Guid` v
 | `POST /activities` | création → 201 ; 403 `ProfileRequired` sans profil ; 400 `ValidationProblem` sinon |
 | `GET /activities/{id}` | détail avec prénom et âge de l'organisateur ; 404 si inconnue |
 
-- `exactLocation` (adresse + coordonnées) n'est rempli que si `CanSeeExactLocation` l'autorise (aujourd'hui : l'organisateur). **Toute nouvelle route qui renvoie une activité doit passer par ce même contrôle.**
+- `exactLocation` (adresse + coordonnées) n'est rempli que si `CanSeeExactLocationAsync` l'autorise : l'organisateur et la personne dont la candidature est acceptée. **Toute nouvelle route qui renvoie une activité doit passer par ce même contrôle.**
 - `publicArea` : centre décalé (`ActivityRules.DrawPublicAreaCenter`, `RandomNumberGenerator`) **stocké** dans `PublicAreaCenter_*`, rayon `PublicAreaRadiusMeters` (5 km). Ne jamais le recalculer à l'affichage.
 - Pas de suppression en cascade depuis le compte : à décider avec la suppression de compte (R10).
 - Les enums sont en texte dans le JSON (`JsonStringEnumConverter`) : les tests lisent les réponses avec `TestJson.Options`.
+
+## Candidatures
+
+Règles métier R1 à R11 : `CLAUDE.md` racine §2.4. Table `ActivityApplications` (jamais de suppression, pas de cascade — R10).
+
+| Route | Qui | Usage |
+|---|---|---|
+| `POST /activities/{id}/applications` | candidat | postuler (`message` facultatif) → 201 |
+| `GET /activities/{id}/applications` | organisateur | candidatures `Pending`, avec prénom, âge et message |
+| `POST /applications/{id}/accept` | organisateur | accepter → 200 (`shortNoticeWarning`) ; l'activité passe `Filled`, les autres `Pending` → `Expired` |
+| `POST /applications/{id}/refuse` | organisateur | refuser → 204 |
+| `GET /applications/mine` | candidat | ses candidatures `Pending` et `Accepted` seulement (R9) |
+
+- **Règles pures** dans `ApplicationRules` (`CheckCanApply`, `CheckCanDecide`) : elles reçoivent tout ce qu'il faut (comptages, heure) et renvoient un code d'erreur, testées unitairement.
+- **Concurrence** : les comptages (R1, R6) et la décision (R4) se font dans une transaction, sous verrou de ligne `FOR UPDATE` sur l'activité et, pour postuler, sur l'utilisateur. Une décision relit la candidature **après** avoir pris le verrou. Les tests `ApplicationConcurrencyTests` envoient de vraies requêtes simultanées et échouent si on retire les verrous.
+- **R9** : le candidat ne reçoit jamais `ApplicationStatus` mais `MyApplicationStatus` (`Pending` / `Accepted` uniquement) ; une conversion d'un autre statut lève une exception plutôt que de fuiter.
+- **Erreurs métier** : `BusinessProblem` (`Common/`) → ProblemDetails avec `code` ; 403 pour les droits (`NotOrganizer`, `CannotApplyToOwnActivity`, `ProfileRequired`), 409 pour les états (`ActivityFull`, `AlreadyApplied`…).
+- **R5 (expiration automatique) n'est pas encore implémentée** : tâche de fond à venir.
 
 ## Heure et dates
 
 - L'horloge est injectée (`TimeProvider`, enregistré dans `Program.cs`) ; ne jamais utiliser `DateTime.Now` / `UtcNow`.
 - Les règles calendaires se comptent en heure de Paris : `ParisCalendar.Today(clock)`.
 - Les instants sont stockés en UTC (`timestamptz`, Npgsql refuse un autre décalage) : `ToUniversalTime()` avant d'enregistrer une date reçue.
-- Tests : `FakeTimeProvider`. Dans les tests d'intégration, l'API voit le **15 juin 2026, 10 h à Paris** (`OnygoApiFactory.Now` / `Today`).
+- Tests : `FakeTimeProvider`. Dans les tests d'intégration, l'API voit le **15 juin 2026, 10 h à Paris** (`OnygoApiFactory.Now`, en UTC, et `Today`). L'horloge est partagée : ne jamais l'avancer dans un test ; pour une activité déjà commencée ou une candidature d'hier, modifier la base avec `factory.WithDatabaseAsync`.
 
 ## E-mails
 
