@@ -11,6 +11,8 @@ back/
 ├── src/Onygo.Api/
 │   ├── Program.cs                    # assemblage des services et des routes
 │   ├── Auth/                         # configuration Identity, Bearer, politique de repli
+│   ├── Profiles/                     # profil : entité, règles, validation, routes
+│   ├── Common/                       # outils transverses (ParisCalendar)
 │   └── Infrastructure/
 │       ├── Persistence/              # OnygoDbContext et migrations EF Core
 │       ├── Email/                    # implémentations de IEmailSender<IdentityUser>
@@ -66,6 +68,27 @@ Sur les routes publiques `/auth/*`, par adresse IP (`Auth/AuthRateLimiting.cs`),
 - Valeurs larges exprès : tout un campus peut partager la même IP publique (Wi-Fi).
 - **À faire avec l'hébergement** : configurer `ForwardedHeaders`, sinon l'API voit l'IP du proxy et tout le monde partage le même quota.
 - Tests : `OnygoApiFactory` lève les limites (tous les tests ont la même IP) ; `RateLimitingTests` les abaisse avec `WithWebHostBuilder`.
+
+## Profil
+
+Profil de l'utilisateur connecté, table `Profiles` (clé = `UserId`, supprimée en cascade avec le compte). Un compte peut exister sans profil (juste après l'inscription).
+
+| Route | Usage |
+|---|---|
+| `GET /profile` | profil (`firstName`, `birthDate`, `age`), 404 s'il n'existe pas encore |
+| `POST /profile` | création (`firstName`, `birthDate`), 201 ; 409 si déjà créé |
+| `PATCH /profile` | modification partielle : seul `firstName` aujourd'hui ; un champ absent n'est pas modifié |
+
+- **18 ans minimum** à la création (`ProfileRules.MinimumAge`), âge calculé sur la date du jour **à Paris**. Né un 29 février : l'anniversaire compte le 1er mars les années non bissextiles.
+- **Date de naissance non modifiable** : l'envoyer dans le `PATCH` renvoie 400 `BirthDateNotEditable` (refus explicite plutôt qu'ignoré en silence).
+- Prénom obligatoire, nettoyé des espaces, 50 caractères maximum.
+- Erreurs : `ValidationProblem` (400) avec un **code** par champ (`ProfileErrorCodes`), à traduire côté front.
+
+## Heure et dates
+
+- L'horloge est injectée (`TimeProvider`, enregistré dans `Program.cs`) ; ne jamais utiliser `DateTime.Now` / `UtcNow`.
+- Les règles calendaires se comptent en heure de Paris : `ParisCalendar.Today(clock)`.
+- Tests : `FakeTimeProvider`. Dans les tests d'intégration, l'API voit le **15 juin 2026, 10 h à Paris** (`OnygoApiFactory.Today`).
 
 ## E-mails
 
