@@ -1,5 +1,7 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Onygo.Api.Activities;
 using Onygo.Api.Auth;
 using Onygo.Api.Infrastructure.Email;
 using Onygo.Api.Infrastructure.OpenApi;
@@ -14,6 +16,9 @@ builder.Services.AddDbContext<OnygoDbContext>(options =>
         ?? throw new InvalidOperationException("Connection string 'Onygo' is missing.")));
 
 builder.Services.AddSingleton(TimeProvider.System);
+// Enums en texte dans le JSON (« Cinema », « Open ») : lisible et stable pour les fronts.
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOnygoAuth(builder.Configuration);
 
 // Le fournisseur d'e-mails n'est pas encore choisi (Brevo ou Resend) : hors développement,
@@ -47,6 +52,7 @@ app.UseAuthorization();
 
 app.MapAuthEndpoints();
 app.MapProfileEndpoints();
+app.MapActivityEndpoints();
 app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

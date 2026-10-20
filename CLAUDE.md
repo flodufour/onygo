@@ -46,7 +46,7 @@ Une activité réunit **un organisateur et une seule personne acceptée**.
 
 1. **Inscription** : e-mail et mot de passe, confirmation de l'e-mail
 2. **Profil** : prénom, date de naissance (18+ obligatoire), 1 à 3 photos, au moins un contact (Instagram ou téléphone), courte bio facultative
-3. **Création d'activité** : type, titre, texte d'accroche obligatoire, lieu, date et heure
+3. **Création d'activité** (profil obligatoire) : type, titre, texte d'accroche obligatoire, lieu, date et heure — voir §2.3
 4. **Feed** : les autres utilisateurs parcourent les activités et appuient sur **O** pour postuler (petit mot facultatif) ou sur **X** pour passer
 5. **Sélection** : l'organisateur voit les candidatures et appuie sur **O** pour accepter ou **X** pour refuser
 6. **Match** : dès qu'un candidat est accepté, l'activité est pourvue et les deux personnes sont mises en relation
@@ -56,6 +56,11 @@ Une activité réunit **un organisateur et une seule personne acceptée**.
 
 - **Au premier plan** : titre, type, lieu, date et heure, image, texte d'accroche
 - **En secondaire** : photos de l'organisateur (vignettes ou révélées au tap — à tester), prénom et âge
+
+Règles de création :
+- **Type** : liste fixe (bar, restaurant, café, cinéma, concert, sport, musée/expo, balade, soirée) ou « autre » avec un libellé libre obligatoire
+- **Date** : dans le futur, **30 jours maximum** à l'avance
+- **Lieu** : l'organisateur saisit l'adresse et les coordonnées exactes. Les autres ne voient qu'un **cercle de 5 km** dont le centre est décalé au hasard (1 à 3 km, tiré une fois à la création) : le lieu est dans le cercle, mais le centre ne le révèle pas. L'adresse exacte n'est visible que par l'organisateur et, après le match, par la personne acceptée.
 
 ### 2.4 Règles métier des candidatures
 

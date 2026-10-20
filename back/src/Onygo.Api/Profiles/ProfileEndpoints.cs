@@ -24,7 +24,7 @@ public static class ProfileEndpoints
         OnygoDbContext dbContext,
         TimeProvider clock)
     {
-        var profile = await dbContext.Profiles.FindAsync(UserIdOf(user));
+        var profile = await dbContext.Profiles.FindAsync(user.UserId());
         return profile is null ? TypedResults.NotFound() : TypedResults.Ok(ToResponse(profile, clock));
     }
 
@@ -40,12 +40,12 @@ public static class ProfileEndpoints
             return TypedResults.ValidationProblem(errors);
         }
 
-        if (await dbContext.Profiles.FindAsync(UserIdOf(user)) is not null)
+        if (await dbContext.Profiles.FindAsync(user.UserId()) is not null)
         {
             return TypedResults.Conflict();
         }
 
-        var profile = new Profile(UserIdOf(user), request.FirstName!.Trim(), request.BirthDate!.Value);
+        var profile = new Profile(user.UserId(), request.FirstName!.Trim(), request.BirthDate!.Value);
         dbContext.Profiles.Add(profile);
         await dbContext.SaveChangesAsync();
 
@@ -64,7 +64,7 @@ public static class ProfileEndpoints
             return TypedResults.ValidationProblem(errors);
         }
 
-        var profile = await dbContext.Profiles.FindAsync(UserIdOf(user));
+        var profile = await dbContext.Profiles.FindAsync(user.UserId());
         if (profile is null)
         {
             return TypedResults.NotFound();
@@ -79,8 +79,6 @@ public static class ProfileEndpoints
 
         return TypedResults.Ok(ToResponse(profile, clock));
     }
-
-    private static string UserIdOf(ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
     private static ProfileResponse ToResponse(Profile profile, TimeProvider clock) =>
         new(profile.FirstName, profile.BirthDate, ProfileRules.AgeOn(profile.BirthDate, ParisCalendar.Today(clock)));

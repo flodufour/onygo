@@ -18,10 +18,13 @@ public sealed class OnygoApiFactory : WebApplicationFactory<Program>, IAsyncLife
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
 
-    /// <summary>Date du jour à Paris vue par l'API pendant les tests (horloge figée à 10 h).</summary>
-    public static readonly DateOnly Today = new(2026, 6, 15);
+    /// <summary>Instant vu par l'API pendant les tests : horloge figée au 15 juin 2026, 10 h à Paris.</summary>
+    public static readonly DateTimeOffset Now = new(2026, 6, 15, 10, 0, 0, TimeSpan.FromHours(2));
 
-    private readonly FakeTimeProvider _clock = new(new DateTimeOffset(Today, new TimeOnly(10, 0), TimeSpan.FromHours(2)));
+    public static readonly DateOnly Today = DateOnly.FromDateTime(Now.DateTime);
+
+    // GetUtcNow() doit renvoyer de l'UTC comme la vraie horloge (PostgreSQL refuse un autre décalage).
+    private readonly FakeTimeProvider _clock = new(Now.ToUniversalTime());
 
     public FakeEmailSender EmailSender { get; } = new();
 
