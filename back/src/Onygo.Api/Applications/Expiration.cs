@@ -7,7 +7,7 @@ namespace Onygo.Api.Applications;
 public sealed record ExpirationResult(int ExpiredActivities, int ExpiredApplications);
 
 /// <summary>
-/// R5 : 2 h avant le début, les candidatures encore en attente expirent, et une activité encore ouverte
+/// R5 : 1 h avant le début, les candidatures encore en attente expirent, et une activité encore ouverte
 /// (donc sans personne acceptée) expire aussi. Idempotent : peut tourner sur plusieurs instances à la fois.
 /// </summary>
 public sealed class ExpirationService(OnygoDbContext dbContext, TimeProvider clock)

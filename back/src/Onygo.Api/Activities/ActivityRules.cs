@@ -23,10 +23,10 @@ public static class ActivityRules
     public const int MaxPublicAreaOffsetMeters = 3_000;
 
     /// <summary>
-    /// R5 : 2 h avant le début, les candidatures en attente expirent et l'activité ne peut plus être pourvue,
+    /// R5 : 1 h avant le début, les candidatures en attente expirent et l'activité ne peut plus être pourvue,
     /// pour laisser à la personne acceptée le temps de s'organiser.
     /// </summary>
-    public static readonly TimeSpan ApplicationsCloseBeforeStart = TimeSpan.FromHours(2);
+    public static readonly TimeSpan ApplicationsCloseBeforeStart = TimeSpan.FromHours(1);
 
     public static bool IsShortNotice(DateTimeOffset startsAt, DateTimeOffset now) => startsAt - now < ShortNoticeThreshold;
 

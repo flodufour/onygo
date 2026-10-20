@@ -3,7 +3,7 @@
 Fichier de reprise : à lire en début de session, avec `CLAUDE.md` (règles métier et principes) et `back/CLAUDE.md` (détails techniques de l'API).
 Il ne répète pas les règles : il dit **ce qui est fait, ce qui reste, dans quel ordre, et ce qui attend une décision**.
 
-> Dernière mise à jour : 20 octobre 2026 — feed fusionné dans `main`.
+> Dernière mise à jour : 20 octobre 2026 — feed et expiration (R5) fusionnés dans `main`.
 
 ---
 
@@ -35,7 +35,7 @@ dotnet test                                            # 193 tests, Docker requi
 | Activités | `POST /activities`, `GET /activities/{id}` : types fixes ou « autre », 30 jours max, lieu exact caché derrière un cercle de 5 km décalé |
 | Candidatures | postuler, trier (O / X), « mes candidatures » : R1 à R4 et R6 à R11, verrous contre la concurrence |
 | Feed | `GET /activities/feed` : critères du §2.5, tri par date, pagination par curseur, alerte délai court (R11) |
-| Expiration (R5) | 2 h avant le début : candidatures en attente et activités sans acceptation expirent (tâche de fond chaque minute) ; candidatures fermées, création au moins 2 h à l'avance |
+| Expiration (R5) | 1 h avant le début : candidatures en attente et activités sans acceptation expirent (tâche de fond chaque minute) ; candidatures fermées, création au moins 1 h à l'avance |
 
 ---
 
@@ -47,9 +47,9 @@ Chaque étape = une branche `feat/…`, tests écrits avec le code, fusion dans 
 
 Reste hors étape : blocage entre utilisateurs (MVP), filtre par distance (MVP).
 
-### ~~Étape 2 — Expiration automatique (R5)~~ ✅ fait (`feat/expiration`)
+### ~~Étape 2 — Expiration automatique (R5)~~ ✅ fait, fusionné dans `main`
 
-Décision prise : expiration **2 h avant le début** (règles mises à jour dans `CLAUDE.md` §2.3, §2.4, §2.5).
+Décision prise : expiration **1 h avant le début** (règles mises à jour dans `CLAUDE.md` §2.3, §2.4, §2.5).
 Reste à préciser avec le front : comment l'organisateur voit une activité expirée sans personne.
 
 ### Étape 3 — Compléter le profil (`feat/profile-contact`)

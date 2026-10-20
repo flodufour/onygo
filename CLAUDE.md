@@ -60,7 +60,7 @@ Une activité réunit **un organisateur et une seule personne acceptée**.
 
 Règles de création :
 - **Type** : liste fixe (bar, restaurant, café, cinéma, concert, sport, musée/expo, balade, soirée) ou « autre » avec un libellé libre obligatoire
-- **Date** : au moins **2 h** à l'avance (les candidatures ferment 2 h avant le début, R5) et **30 jours maximum**
+- **Date** : au moins **1 h** à l'avance (les candidatures ferment 1 h avant le début, R5) et **30 jours maximum**
 - **Lieu** : l'organisateur saisit l'adresse et les coordonnées exactes. Les autres ne voient qu'un **cercle de 5 km** dont le centre est décalé au hasard (1 à 3 km, tiré une fois à la création) : le lieu est dans le cercle, mais le centre ne le révèle pas. L'adresse exacte n'est visible que par l'organisateur et, après le match, par la personne acceptée.
 
 ### 2.4 Règles métier des candidatures
@@ -73,15 +73,15 @@ Ces règles sont **implémentées et garanties par l'API**, protégées par des 
 | R2 | **Un refus libère une place** | L'activité revient dans le feed si elle est encore ouverte |
 | R3 | **Pas de re-candidature** | Une seule candidature par personne et par activité, quel que soit son statut ; un refusé ne revoit plus l'activité |
 | R4 | **Une acceptation pourvoit l'activité** | L'activité passe en `Filled`, toutes les autres candidatures `Pending` passent en `Expired` |
-| R5 | **Expiration automatique** | **2 h avant le début** : les candidatures `Pending` passent en `Expired`, et une activité encore `Open` (personne d'acceptée) passe en `Expired`. À partir de ce moment, on ne peut plus postuler ni accepter |
+| R5 | **Expiration automatique** | **1 h avant le début** : les candidatures `Pending` passent en `Expired`, et une activité encore `Open` (personne d'acceptée) passe en `Expired`. À partir de ce moment, on ne peut plus postuler ni accepter |
 | R6 | **5 candidatures maximum par utilisateur et par jour** | Jour calendaire en heure de Paris (`Europe/Paris`) |
 | R7 | **On ne postule pas à sa propre activité** | |
-| R8 | **On ne postule qu'à une activité `Open` qui commence dans plus de 2 h** | Voir R5 |
+| R8 | **On ne postule qu'à une activité `Open` qui commence dans plus d'1 h** | Voir R5 |
 | R9 | **Refus silencieux** | Aucun message ni notification de refus, comme sur Tinder ou Hinge : le candidat ne revoit simplement plus l'activité. L'API ne lui expose **jamais** le statut `Refused` ; ses candidatures refusées ou expirées n'apparaissent plus dans « Mes candidatures » |
 | R10 | **Aucune suppression physique des candidatures** | Statuts : `Pending`, `Accepted`, `Refused`, `Expired` |
 | R11 | **Alerte délai court** | Si on postule à une activité qui commence **dans moins de 6 h**, ou si l'organisateur accepte une candidature **moins de 6 h** avant le début, l'appli affiche une petite alerte : « Attention, l'autre personne risque de ne pas le voir à temps ». L'action reste possible ; l'alerte informe, elle ne bloque pas |
 
-Les limites (3 en attente, 5 par jour, 6 h, 2 h) sont des **constantes métier** définies côté API et reprises dans `@onygo/shared/constants` pour l'affichage.
+Les limites (3 en attente, 5 par jour, 6 h, 1 h) sont des **constantes métier** définies côté API et reprises dans `@onygo/shared/constants` pour l'affichage.
 
 R1 et R4 sont **sensibles à la concurrence** (deux requêtes simultanées) : elles doivent être protégées par une transaction et un verrou, et testées comme telles. R6 l'est aussi (même utilisateur, plusieurs requêtes) et suit le même principe.
 
@@ -94,13 +94,13 @@ Précisions :
 ### 2.5 Feed
 
 Le feed renvoie les activités :
-- au statut `Open` et qui commencent dans plus de 2 h (R5)
+- au statut `Open` et qui commencent dans plus d'1 h (R5)
 - dont l'utilisateur n'est pas l'organisateur
 - auxquelles il n'a pas déjà postulé
 - avec moins de 3 candidatures `Pending`
 - (MVP) sans blocage entre l'utilisateur et l'organisateur
 
-Les activités qui commencent dans moins de 6 h (mais plus de 2 h) restent visibles, avec l'indicateur d'alerte de R11.
+Les activités qui commencent dans moins de 6 h (mais plus d'1 h) restent visibles, avec l'indicateur d'alerte de R11.
 
 Tri : date la plus proche d'abord. Pagination par curseur.
 

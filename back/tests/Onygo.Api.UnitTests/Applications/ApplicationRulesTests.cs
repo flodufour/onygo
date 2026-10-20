@@ -67,11 +67,11 @@ public class ApplicationRulesTests
         Assert.Equal(ApplicationErrorCodes.ActivityNotOpen, error);
     }
 
-    // R5 : les candidatures ferment 2 h avant le début.
+    // R5 : les candidatures ferment 1 h avant le début.
     [Fact]
-    public void CheckCanApply_Exactly2HoursBeforeStart_ReturnsApplicationsClosed()
+    public void CheckCanApply_Exactly1HourBeforeStart_ReturnsApplicationsClosed()
     {
-        var activity = AnOpenActivity(startsAt: Now.AddHours(2));
+        var activity = AnOpenActivity(startsAt: Now.AddHours(1));
 
         var error = ApplicationRules.CheckCanApply(AValidApplyCheck() with { Activity = activity });
 
@@ -79,9 +79,9 @@ public class ApplicationRulesTests
     }
 
     [Fact]
-    public void CheckCanApply_2HoursAnd1MinuteBeforeStart_ReturnsNull()
+    public void CheckCanApply_1HourAnd1MinuteBeforeStart_ReturnsNull()
     {
-        var activity = AnOpenActivity(startsAt: Now.AddHours(2).AddMinutes(1));
+        var activity = AnOpenActivity(startsAt: Now.AddHours(1).AddMinutes(1));
 
         var error = ApplicationRules.CheckCanApply(AValidApplyCheck() with { Activity = activity });
 
@@ -155,11 +155,11 @@ public class ApplicationRulesTests
         Assert.Equal(ApplicationErrorCodes.ApplicationNotPending, error);
     }
 
-    // R5 : une candidature acceptée moins de 2 h avant le début aurait déjà dû expirer.
+    // R5 : une candidature acceptée moins d'1 h avant le début aurait déjà dû expirer.
     [Fact]
-    public void CheckCanDecide_AcceptanceExactly2HoursBeforeStart_ReturnsApplicationsClosed()
+    public void CheckCanDecide_AcceptanceExactly1HourBeforeStart_ReturnsApplicationsClosed()
     {
-        var check = AnAcceptanceByTheOrganizer() with { Now = Now.AddDays(1).AddHours(-2) };
+        var check = AnAcceptanceByTheOrganizer() with { Now = Now.AddDays(1).AddHours(-1) };
 
         var error = ApplicationRules.CheckCanDecide(check);
 

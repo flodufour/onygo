@@ -130,12 +130,12 @@ public class FeedTests(OnygoApiFactory factory)
 
     // R5 : plus possible d'y postuler.
     [Fact]
-    public async Task Feed_ExcludesActivityStartingWithin2Hours()
+    public async Task Feed_ExcludesActivityStartingWithin1Hour()
     {
         var organizer = await _auth.CreateSignedInClientWithProfileAsync();
         var viewer = await _auth.CreateSignedInClientWithProfileAsync(firstName: "Léa");
         var activity = await organizer.CreateActivityAsync(AValidActivity());
-        await factory.SetActivityStartAsync(activity.Id, OnygoApiFactory.Now.AddHours(2));
+        await factory.SetActivityStartAsync(activity.Id, OnygoApiFactory.Now.AddHours(1));
 
         var feed = await viewer.ReadWholeFeedAsync();
 

@@ -7,7 +7,7 @@ using static Onygo.Api.IntegrationTests.Activities.ActivityRequests;
 namespace Onygo.Api.IntegrationTests.Applications;
 
 /// <summary>
-/// R5 : 2 h avant le début, les candidatures en attente et les activités encore ouvertes expirent.
+/// R5 : 1 h avant le début, les candidatures en attente et les activités encore ouvertes expirent.
 /// </summary>
 [Collection(ApiCollection.Name)]
 public class ExpirationTests(OnygoApiFactory factory)
@@ -15,13 +15,13 @@ public class ExpirationTests(OnygoApiFactory factory)
     private readonly AuthApiClient _auth = new(factory);
 
     [Fact]
-    public async Task Expiration_PendingApplication2HoursBeforeStart_BecomesExpired()
+    public async Task Expiration_PendingApplication1HourBeforeStart_BecomesExpired()
     {
         var organizer = await _auth.CreateSignedInClientWithProfileAsync();
         var applicant = await _auth.CreateSignedInClientWithProfileAsync(firstName: "Léa");
         var activity = await organizer.CreateActivityAsync(AValidActivity());
         var applicationId = await applicant.ApplySuccessfullyAsync(activity.Id);
-        await factory.SetActivityStartAsync(activity.Id, OnygoApiFactory.Now.AddHours(2));
+        await factory.SetActivityStartAsync(activity.Id, OnygoApiFactory.Now.AddHours(1));
 
         await factory.RunExpirationAsync();
 
@@ -29,12 +29,12 @@ public class ExpirationTests(OnygoApiFactory factory)
     }
 
     [Fact]
-    public async Task Expiration_PendingApplication2HoursAnd1MinuteBeforeStart_StaysPending()
+    public async Task Expiration_PendingApplication1HourAnd1MinuteBeforeStart_StaysPending()
     {
         var organizer = await _auth.CreateSignedInClientWithProfileAsync();
         var applicant = await _auth.CreateSignedInClientWithProfileAsync(firstName: "Léa");
         var activity = await organizer.CreateActivityAsync(
-            AValidActivity() with { StartsAt = OnygoApiFactory.Now.AddHours(2).AddMinutes(1) });
+            AValidActivity() with { StartsAt = OnygoApiFactory.Now.AddHours(1).AddMinutes(1) });
         var applicationId = await applicant.ApplySuccessfullyAsync(activity.Id);
 
         await factory.RunExpirationAsync();

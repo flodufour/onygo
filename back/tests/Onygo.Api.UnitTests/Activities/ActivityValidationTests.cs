@@ -128,19 +128,19 @@ public class ActivityValidationTests
         Assert.Equal([ActivityErrorCodes.StartsAtInPast], errors["startsAt"]);
     }
 
-    // Personne ne pourrait postuler : les candidatures ferment 2 h avant le début (R5).
+    // Personne ne pourrait postuler : les candidatures ferment 1 h avant le début (R5).
     [Fact]
-    public void ValidateCreation_StartingIn2Hours_ReturnsStartsAtTooSoon()
+    public void ValidateCreation_StartingIn1Hour_ReturnsStartsAtTooSoon()
     {
-        var errors = ActivityValidation.ValidateCreation(AValidActivity() with { StartsAt = Now.AddHours(2) }, Now);
+        var errors = ActivityValidation.ValidateCreation(AValidActivity() with { StartsAt = Now.AddHours(1) }, Now);
 
         Assert.Equal([ActivityErrorCodes.StartsAtTooSoon], errors["startsAt"]);
     }
 
     [Fact]
-    public void ValidateCreation_StartingIn2HoursAnd1Minute_ReturnsNoError()
+    public void ValidateCreation_StartingIn1HourAnd1Minute_ReturnsNoError()
     {
-        var request = AValidActivity() with { StartsAt = Now.AddHours(2).AddMinutes(1) };
+        var request = AValidActivity() with { StartsAt = Now.AddHours(1).AddMinutes(1) };
 
         var errors = ActivityValidation.ValidateCreation(request, Now);
 
