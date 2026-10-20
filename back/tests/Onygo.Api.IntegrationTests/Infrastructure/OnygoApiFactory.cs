@@ -32,6 +32,10 @@ public sealed class OnygoApiFactory : WebApplicationFactory<Program>, IAsyncLife
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:Onygo", _postgres.GetConnectionString());
+        // Tous les tests partagent la même « adresse IP » : sans limites hautes, ils se bloqueraient entre eux.
+        // Les limites réelles sont testées dans RateLimitingTests.
+        builder.UseSetting("RateLimiting:Auth:SignInPermitsPerMinute", "100000");
+        builder.UseSetting("RateLimiting:Auth:EmailPermitsPerHour", "100000");
         builder.ConfigureTestServices(services =>
             services.AddSingleton<IEmailSender<IdentityUser>>(EmailSender));
     }

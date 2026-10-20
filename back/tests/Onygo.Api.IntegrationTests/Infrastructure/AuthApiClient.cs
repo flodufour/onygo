@@ -7,11 +7,16 @@ namespace Onygo.Api.IntegrationTests.Infrastructure;
 /// <summary>
 /// Appelle les routes d'authentification d'Identity comme le ferait un front.
 /// </summary>
-public sealed class AuthApiClient(OnygoApiFactory factory)
+public sealed class AuthApiClient(OnygoApiFactory factory, HttpClient http)
 {
     public const string ValidPassword = "Onygo-Passw0rd!";
 
-    public HttpClient Http { get; } = factory.CreateClient();
+    public AuthApiClient(OnygoApiFactory factory)
+        : this(factory, factory.CreateClient())
+    {
+    }
+
+    public HttpClient Http { get; } = http;
 
     public static string NewEmail() => $"user-{Guid.NewGuid():N}@onygo.test";
 

@@ -9,7 +9,8 @@ back/
 ├── Onygo.slnx
 ├── dotnet-tools.json                 # outil local dotnet-ef
 ├── src/Onygo.Api/
-│   ├── Program.cs                    # configuration des services et des routes
+│   ├── Program.cs                    # assemblage des services et des routes
+│   ├── Auth/                         # configuration Identity, Bearer, politique de repli
 │   └── Infrastructure/
 │       ├── Persistence/              # OnygoDbContext et migrations EF Core
 │       ├── Email/                    # implémentations de IEmailSender<IdentityUser>
@@ -24,7 +25,9 @@ Les tests reprennent l'arborescence de `src/` (ex. `Infrastructure/Email/Develop
 
 ## Authentification
 
-On utilise les **Identity API endpoints** de Microsoft (`AddIdentityApiEndpoints` + `MapIdentityApi`), sans surcouche maison. Jetons Bearer **opaques** (pas de JWT) : accès 1 h, refresh 14 jours (valeurs par défaut).
+On utilise les **Identity API endpoints** de Microsoft (`MapIdentityApi`), sans surcouche maison, configurés dans `Auth/AuthSetup.cs`. Jetons Bearer **opaques** (pas de JWT) : accès 1 h, refresh 14 jours (valeurs par défaut).
+
+**Bearer uniquement** : Identity est enregistré avec `AddIdentityCore` + `AddApiEndpoints` + `AddBearerToken`, sans les cookies qu'ajouterait `AddIdentityApiEndpoints`.
 
 | Route | Usage |
 |---|---|
@@ -37,17 +40,32 @@ On utilise les **Identity API endpoints** de Microsoft (`AddIdentityApiEndpoints
 | `POST /auth/resetPassword` | `email`, `resetCode`, `newPassword` |
 | `GET/POST /auth/manage/info` | infos du compte connecté |
 
-Options : e-mail unique, **connexion refusée tant que l'e-mail n'est pas confirmé**, politique de mot de passe par défaut d'Identity (6 caractères minimum, majuscule, minuscule, chiffre, caractère spécial).
+Options : e-mail unique, **connexion refusée tant que l'e-mail n'est pas confirmé**, mot de passe de **8 caractères minimum** avec majuscule, minuscule, chiffre et caractère spécial (règles par défaut d'Identity, longueur relevée).
 
-Les routes `/auth/manage/2fa` sont aussi exposées par `MapIdentityApi`, mais la 2FA ne fait pas partie du périmètre.
+`UnsupportedIdentityFeaturesFilter` ferme ce que `MapIdentityApi` expose sans qu'on s'en serve :
+- `?useCookies=true` ou `?useSessionCookies=true` sur `/auth/login` → **400**
+- `/auth/manage/2fa` → **404** (2FA hors périmètre)
 
 ## Autorisation
 
 **Politique de repli** : toute route exige un utilisateur connecté par défaut. Une route publique doit le dire explicitement avec `.AllowAnonymous()`. Une route inconnue appelée sans jeton répond donc 401, pas 404.
 
-Routes publiques aujourd'hui : `/health`, les routes `/auth/*` sauf `/auth/manage/*`, et en développement `/openapi/v1.json` et Swagger UI.
+Routes publiques aujourd'hui : `/health`, les routes `/auth/*` sauf `/auth/manage/*`, et en développement `/openapi/v1.json` et Swagger UI. Côté `/auth`, c'est la convention `OpenAndRateLimitPublicRoute` (`Auth/AuthSetup.cs`) qui ouvre les routes sans exigence d'autorisation.
 
 `UseAuthentication()` et `UseAuthorization()` sont appelés explicitement **après** `UseSwaggerUI()` : Swagger UI sert des fichiers via un middleware, pas via une route, et serait sinon bloqué.
+
+## Limitation du nombre de requêtes
+
+Sur les routes publiques `/auth/*`, par adresse IP (`Auth/AuthRateLimiting.cs`), réponse **429** au-delà :
+
+| Quota | Routes | Défaut | Clé de configuration |
+|---|---|---|---|
+| connexion | login, register, refresh, resetPassword, confirmEmail | 20 / minute | `RateLimiting:Auth:SignInPermitsPerMinute` |
+| e-mails | forgotPassword, resendConfirmationEmail | 5 / heure | `RateLimiting:Auth:EmailPermitsPerHour` |
+
+- Valeurs larges exprès : tout un campus peut partager la même IP publique (Wi-Fi).
+- **À faire avec l'hébergement** : configurer `ForwardedHeaders`, sinon l'API voit l'IP du proxy et tout le monde partage le même quota.
+- Tests : `OnygoApiFactory` lève les limites (tous les tests ont la même IP) ; `RateLimitingTests` les abaisse avec `WithWebHostBuilder`.
 
 ## E-mails
 
@@ -60,6 +78,7 @@ Le fournisseur n'est pas encore choisi (décision ouverte). En attendant :
 
 - Chaîne de connexion `ConnectionStrings:Onygo`. En local elle est dans `appsettings.Development.json` et pointe vers le PostgreSQL Docker (port **5433**). Hors local, elle passe par la variable d'environnement `ConnectionStrings__Onygo`, jamais par le dépôt.
 - Les migrations ne sont **pas** appliquées au démarrage de l'API.
+- Table `DataProtectionKeys` : clés qui chiffrent les jetons Bearer, stockées en base pour survivre aux redéploiements et être partagées entre instances. Elles y sont **en clair** : l'accès à la base doit rester restreint. Les chiffrer avec un certificat (`ProtectKeysWith…`) est à décider avec l'hébergement.
 
 ## Commandes (depuis `back/`)
 
