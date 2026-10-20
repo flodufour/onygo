@@ -15,7 +15,7 @@ cd back
 dotnet tool restore                                    # dotnet-ef
 dotnet ef database update --project src/Onygo.Api      # appliquer les migrations
 dotnet run --project src/Onygo.Api                     # http://localhost:5100/swagger
-dotnet test                                            # 156 tests, Docker requis
+dotnet test                                            # 181 tests, Docker requis
 ```
 
 - Si l'API tourne déjà pendant `dotnet test`, le build échoue (fichiers verrouillés) : lancer `dotnet test -c Release`.
@@ -34,8 +34,7 @@ dotnet test                                            # 156 tests, Docker requi
 | Profil | `GET/POST/PATCH /profile` : prénom, date de naissance (18+, non modifiable) |
 | Activités | `POST /activities`, `GET /activities/{id}` : types fixes ou « autre », 30 jours max, lieu exact caché derrière un cercle de 5 km décalé |
 | Candidatures | postuler, trier (O / X), « mes candidatures » : R1 à R4 et R6 à R11, verrous contre la concurrence |
-
-Toutes les branches de fonctionnalité sont fusionnées dans `main` et poussées.
+| Feed | `GET /activities/feed` : critères du §2.5, tri par date, pagination par curseur, alerte délai court (R11) |
 
 ---
 
@@ -43,17 +42,9 @@ Toutes les branches de fonctionnalité sont fusionnées dans `main` et poussées
 
 Chaque étape = une branche `feat/…`, tests écrits avec le code, fusion dans `main` après validation.
 
-### Étape 1 — Feed (`feat/feed`)
+### ~~Étape 1 — Feed~~ ✅ fait (`feat/feed`)
 
-Règles : `CLAUDE.md` §2.5.
-
-- [ ] `GET /activities/feed` : activités `Open`, futures, dont on n'est pas l'organisateur, auxquelles on n'a pas postulé (quel que soit le statut, R3), avec **moins de 3** candidatures `Pending` (R1)
-- [ ] Tri par date la plus proche ; **pagination par curseur** (`StartsAt` + `Id` pour départager), taille de page en constante
-- [ ] Ajouter `shortNoticeWarning` dans `ActivityResponse` (R11, moins de 6 h) — utile au feed et au détail
-- [ ] Ne jamais renvoyer `exactLocation` dans le feed (passer par `CanSeeExactLocationAsync` ou ne pas le remplir)
-- [ ] Index `(Status, StartsAt)` sur `Activities` (migration)
-- [ ] Tests : chaque critère d'exclusion, ordre, pagination (pas de doublon ni de trou entre deux pages), activité qui revient après un refus (R2), refusé qui ne la revoit pas (R3/R9)
-- Hors étape : blocage entre utilisateurs (MVP), filtre par distance (MVP)
+Reste hors étape : blocage entre utilisateurs (MVP), filtre par distance (MVP).
 
 ### Étape 2 — Expiration automatique, R5 (`feat/expiration`)
 

@@ -309,6 +309,8 @@ namespace Onygo.Api.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("OrganizerId");
 
+                    b.HasIndex("Status", "StartsAt");
+
                     b.ToTable("Activities");
                 });
 

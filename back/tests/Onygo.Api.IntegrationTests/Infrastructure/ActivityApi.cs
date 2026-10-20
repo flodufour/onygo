@@ -59,4 +59,40 @@ public static class ActivityApi
 
     public static async Task<ActivityResponse> GetActivityAsync(this HttpClient client, Guid activityId) =>
         (await client.GetFromJsonAsync<ActivityResponse>($"/activities/{activityId}", TestJson.Options))!;
+
+    public static async Task<FeedPageResponse> GetFeedPageAsync(this HttpClient viewer, string? cursor = null, int? limit = null)
+    {
+        var query = new List<string>();
+        if (cursor is not null)
+        {
+            query.Add($"cursor={Uri.EscapeDataString(cursor)}");
+        }
+
+        if (limit is not null)
+        {
+            query.Add($"limit={limit}");
+        }
+
+        var url = query.Count == 0 ? "/activities/feed" : $"/activities/feed?{string.Join('&', query)}";
+        return (await viewer.GetFromJsonAsync<FeedPageResponse>(url, TestJson.Options))!;
+    }
+
+    /// <summary>
+    /// Parcourt toutes les pages du feed. La base est partagée entre les tests : chaque test ne vérifie
+    /// que ses propres activités dans le résultat.
+    /// </summary>
+    public static async Task<List<ActivityResponse>> ReadWholeFeedAsync(this HttpClient viewer, int? limit = null)
+    {
+        var activities = new List<ActivityResponse>();
+        string? cursor = null;
+        do
+        {
+            var page = await viewer.GetFeedPageAsync(cursor, limit ?? FeedRules.MaxPageSize);
+            activities.AddRange(page.Activities);
+            cursor = page.NextCursor;
+        }
+        while (cursor is not null);
+
+        return activities;
+    }
 }

@@ -16,6 +16,7 @@ public static class ActivityEndpoints
     {
         var activities = app.MapGroup("/activities").WithTags("Activities");
         activities.MapPost("/", CreateActivity);
+        activities.MapGet("/feed", GetFeed);
         activities.MapGet("/{id:guid}", GetActivity);
         return app;
     }
@@ -68,6 +69,71 @@ public static class ActivityEndpoints
         return TypedResults.Ok(ToResponse(found, canSeeExactLocation, clock));
     }
 
+    /// <summary>
+    /// Activités proposables à l'utilisateur (CLAUDE.md racine §2.5), de la plus proche à la plus lointaine.
+    /// </summary>
+    private static async Task<Results<Ok<FeedPageResponse>, ValidationProblem>> GetFeed(
+        string? cursor,
+        int? limit,
+        ClaimsPrincipal user,
+        OnygoDbContext dbContext,
+        TimeProvider clock)
+    {
+        var (query, errors) = FeedRules.Parse(cursor, limit);
+        if (query is null)
+        {
+            return TypedResults.ValidationProblem(errors);
+        }
+
+        // Une ligne de plus que la page : sa présence dit s'il reste des activités après.
+        var rows = await FeedActivities(dbContext, user.UserId(), clock.GetUtcNow(), query.After)
+            .Take(query.PageSize + 1)
+            .ToListAsync();
+        var page = rows.Take(query.PageSize).ToList();
+        var nextCursor = rows.Count > query.PageSize
+            ? new FeedCursor(page[^1].Activity.StartsAt, page[^1].Activity.Id).Encode()
+            : null;
+
+        // Le feed ne contient que des activités d'autres organisateurs, sans candidature de l'utilisateur :
+        // il n'a donc jamais droit au lieu exact.
+        var activities = page.Select(found => ToResponse(found, canSeeExactLocation: false, clock)).ToList();
+        return TypedResults.Ok(new FeedPageResponse(activities, nextCursor));
+    }
+
+    private static IQueryable<ActivityWithOrganizer> FeedActivities(
+        OnygoDbContext dbContext,
+        string viewerId,
+        DateTimeOffset now,
+        FeedCursor? after)
+    {
+        var candidates =
+            from activity in dbContext.Activities
+            join organizer in dbContext.Profiles on activity.OrganizerId equals organizer.UserId
+            where activity.Status == ActivityStatus.Open
+                && activity.StartsAt > now
+                && activity.OrganizerId != viewerId
+                // R3 : une candidature, quel que soit son statut, retire l'activité du feed (un refusé ne la revoit pas).
+                && !dbContext.Applications.Any(application =>
+                    application.ActivityId == activity.Id && application.ApplicantId == viewerId)
+                // R1 : avec 3 candidatures en attente, l'activité disparaît ; un refus la fait revenir (R2).
+                && dbContext.Applications.Count(application =>
+                    application.ActivityId == activity.Id && application.Status == ApplicationStatus.Pending)
+                    < ApplicationRules.MaxPendingApplicationsPerActivity
+            select new { Activity = activity, Organizer = organizer };
+
+        if (after is not null)
+        {
+            candidates = candidates.Where(found =>
+                found.Activity.StartsAt > after.StartsAt
+                || (found.Activity.StartsAt == after.StartsAt && found.Activity.Id.CompareTo(after.ActivityId) > 0));
+        }
+
+        return candidates
+            .OrderBy(found => found.Activity.StartsAt)
+            .ThenBy(found => found.Activity.Id)
+            .Select(found => new ActivityWithOrganizer(found.Activity, found.Organizer));
+    }
+
     // Appelé après validation : les champs obligatoires sont présents.
     private static Activity NewActivity(CreateActivityRequest request, string organizerId, TimeProvider clock)
     {
@@ -108,7 +174,8 @@ public static class ActivityEndpoints
             canSeeExactLocation ? ToExactLocation(activity.Location) : null,
             new OrganizerResponse(
                 organizer.FirstName,
-                ProfileRules.AgeOn(organizer.BirthDate, ParisCalendar.Today(clock))));
+                ProfileRules.AgeOn(organizer.BirthDate, ParisCalendar.Today(clock))),
+            ActivityRules.IsShortNotice(activity.StartsAt, clock.GetUtcNow()));
     }
 
     /// <summary>Le lieu exact n'est connu que de l'organisateur et, après le match, de la personne acceptée.</summary>
