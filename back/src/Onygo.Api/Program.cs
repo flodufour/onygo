@@ -4,6 +4,7 @@ using Onygo.Api.Auth;
 using Onygo.Api.Infrastructure.Email;
 using Onygo.Api.Infrastructure.OpenApi;
 using Onygo.Api.Infrastructure.Persistence;
+using Onygo.Api.Profiles;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,7 @@ builder.Services.AddDbContext<OnygoDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Onygo")
         ?? throw new InvalidOperationException("Connection string 'Onygo' is missing.")));
 
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddOnygoAuth(builder.Configuration);
 
 // Le fournisseur d'e-mails n'est pas encore choisi (Brevo ou Resend) : hors développement,
@@ -44,6 +46,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapAuthEndpoints();
+app.MapProfileEndpoints();
 app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

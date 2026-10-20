@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Time.Testing;
 using Onygo.Api.Infrastructure.Persistence;
 using Testcontainers.PostgreSql;
 
@@ -16,6 +17,11 @@ namespace Onygo.Api.IntegrationTests.Infrastructure;
 public sealed class OnygoApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
+
+    /// <summary>Date du jour à Paris vue par l'API pendant les tests (horloge figée à 10 h).</summary>
+    public static readonly DateOnly Today = new(2026, 6, 15);
+
+    private readonly FakeTimeProvider _clock = new(new DateTimeOffset(Today, new TimeOnly(10, 0), TimeSpan.FromHours(2)));
 
     public FakeEmailSender EmailSender { get; } = new();
 
@@ -37,7 +43,10 @@ public sealed class OnygoApiFactory : WebApplicationFactory<Program>, IAsyncLife
         builder.UseSetting("RateLimiting:Auth:SignInPermitsPerMinute", "100000");
         builder.UseSetting("RateLimiting:Auth:EmailPermitsPerHour", "100000");
         builder.ConfigureTestServices(services =>
-            services.AddSingleton<IEmailSender<IdentityUser>>(EmailSender));
+        {
+            services.AddSingleton<IEmailSender<IdentityUser>>(EmailSender);
+            services.AddSingleton<TimeProvider>(_clock);
+        });
     }
 
     async Task IAsyncLifetime.DisposeAsync()

@@ -64,4 +64,13 @@ public sealed class AuthApiClient(OnygoApiFactory factory, HttpClient http)
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<AccessTokenResponse>())!;
     }
+
+    /// <summary>Client HTTP d'un nouvel utilisateur confirmé et connecté (jeton Bearer déjà positionné).</summary>
+    public async Task<HttpClient> CreateSignedInClientAsync()
+    {
+        var tokens = await LoginConfirmedUserAsync();
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        return client;
+    }
 }
