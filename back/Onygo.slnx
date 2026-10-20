@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Onygo.Api/Onygo.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Onygo.Api.IntegrationTests/Onygo.Api.IntegrationTests.csproj" />
+    <Project Path="tests/Onygo.Api.UnitTests/Onygo.Api.UnitTests.csproj" />
+  </Folder>
+</Solution>

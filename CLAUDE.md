@@ -190,7 +190,7 @@ onygo/
 ├── .gitignore
 ├── .editorconfig
 ├── back/                     # API .NET          → voir back/CLAUDE.md
-│   ├── Onygo.sln
+│   ├── Onygo.slnx
 │   ├── src/Onygo.Api/
 │   └── tests/
 │       ├── Onygo.Api.UnitTests/
