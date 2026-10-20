@@ -11,6 +11,7 @@ Chaque partie du projet a aussi son propre `CLAUDE.md` pour les détails techniq
 | `front/mobile/CLAUDE.md` | Appli Expo : navigation, stockage des jetons, modules, builds |
 | `front/web/CLAUDE.md` | Site Next.js : pages, référencement |
 | `front/shared/CLAUDE.md` | Paquet commun : génération du client API |
+| `SUIVI.md` | État d'avancement, prochaines étapes, décisions en attente — à lire pour reprendre le travail |
 
 **Règle anti-doublon** : une information vit dans un seul fichier. Les règles métier et les principes de travail sont **ici** ; les détails techniques sont dans les fichiers des dossiers. En cas de contradiction entre un fichier et le code, signale l'écart au lieu de deviner.
 
