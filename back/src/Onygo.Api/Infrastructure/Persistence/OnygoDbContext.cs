@@ -43,6 +43,8 @@ public class OnygoDbContext(DbContextOptions<OnygoDbContext> options)
             activity.ComplexProperty(a => a.Location, location =>
                 location.Property(l => l.Address).HasMaxLength(ActivityRules.MaxAddressLength));
             activity.ComplexProperty(a => a.PublicAreaCenter);
+            // Feed : activités ouvertes triées par date.
+            activity.HasIndex(a => new { a.Status, a.StartsAt });
             // Pas de cascade : que deviennent les activités (et leurs candidatures, jamais supprimées — R10)
             // quand un compte est supprimé se décidera avec la suppression de compte.
             activity.HasOne<IdentityUser>().WithMany().HasForeignKey(a => a.OrganizerId).OnDelete(DeleteBehavior.Restrict);

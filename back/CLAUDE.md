@@ -93,10 +93,13 @@ Règles métier : voir `CLAUDE.md` racine §2.3. Table `Activities` (id `Guid` v
 | Route | Usage |
 |---|---|
 | `POST /activities` | création → 201 ; 403 `ProfileRequired` sans profil ; 400 `ValidationProblem` sinon |
+| `GET /activities/feed` | feed paginé : `?cursor=…&limit=…` (20 par défaut, 50 max) → `{ activities, nextCursor }` |
 | `GET /activities/{id}` | détail avec prénom et âge de l'organisateur ; 404 si inconnue |
 
 - `exactLocation` (adresse + coordonnées) n'est rempli que si `CanSeeExactLocationAsync` l'autorise : l'organisateur et la personne dont la candidature est acceptée. **Toute nouvelle route qui renvoie une activité doit passer par ce même contrôle.**
 - `publicArea` : centre décalé (`ActivityRules.DrawPublicAreaCenter`, `RandomNumberGenerator`) **stocké** dans `PublicAreaCenter_*`, rayon `PublicAreaRadiusMeters` (5 km). Ne jamais le recalculer à l'affichage.
+- `shortNoticeWarning` (R11) est calculé à chaque réponse : vrai si l'activité commence dans moins de 6 h.
+- **Feed** (`CLAUDE.md` racine §2.5) : critères dans `FeedActivities`, tri `(StartsAt, Id)`, index `(Status, StartsAt)`. Le curseur (`FeedCursor`) est opaque pour le front (base64url de la date et de l'id de la dernière activité) : la page suivante reprend strictement après, sans doublon ni trou même à date égale. `nextCursor` vaut `null` sur la dernière page. Le feed ne renvoie jamais `exactLocation`.
 - Pas de suppression en cascade depuis le compte : à décider avec la suppression de compte (R10).
 - Les enums sont en texte dans le JSON (`JsonStringEnumConverter`) : les tests lisent les réponses avec `TestJson.Options`.
 
@@ -160,3 +163,4 @@ En développement uniquement :
 - L'isolation passe par les données : chaque test crée ses propres utilisateurs avec `AuthApiClient.NewEmail()`.
 - `AuthApiClient` appelle les routes comme le ferait un front (`RegisterConfirmedUserAsync`, `CreateSignedInClientAsync`, `CreateSignedInClientWithProfileAsync`…).
 - Données de test : fabriques avec valeurs par défaut valides (`ActivityRequests.AValidActivity() with { … }`).
+- Feed : la base étant partagée, les tests lisent tout le feed (`ReadWholeFeedAsync`) et ne vérifient que **leurs** activités (présence, absence, ordre relatif).

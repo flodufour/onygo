@@ -20,7 +20,11 @@ public sealed record ActivityResponse(
     ActivityStatus Status,
     PublicAreaResponse PublicArea,
     ExactLocationResponse? ExactLocation,
-    OrganizerResponse Organizer);
+    OrganizerResponse Organizer,
+    bool ShortNoticeWarning);
+
+/// <summary>Une page du feed ; NextCursor est null quand il n'y a plus rien après.</summary>
+public sealed record FeedPageResponse(IReadOnlyList<ActivityResponse> Activities, string? NextCursor);
 
 /// <summary>Zone approximative visible par tous : le lieu exact est quelque part dans ce cercle.</summary>
 public sealed record PublicAreaResponse(double Latitude, double Longitude, int RadiusMeters);
@@ -52,4 +56,6 @@ public static class ActivityErrorCodes
     public const string StartsAtRequired = "StartsAtRequired";
     public const string StartsAtInPast = "StartsAtInPast";
     public const string StartsAtTooFarAhead = "StartsAtTooFarAhead";
+    public const string InvalidCursor = "InvalidCursor";
+    public const string LimitOutOfRange = "LimitOutOfRange";
 }
