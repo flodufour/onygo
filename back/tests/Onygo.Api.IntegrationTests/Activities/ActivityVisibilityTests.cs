@@ -53,6 +53,32 @@ public class ActivityVisibilityTests(OnygoApiFactory factory)
     }
 
     [Fact]
+    public async Task GetActivity_AsAcceptedApplicant_IncludesExactLocation()
+    {
+        var organizer = await _auth.CreateSignedInClientWithProfileAsync();
+        var applicant = await _auth.CreateSignedInClientWithProfileAsync(firstName: "Léa");
+        var activityId = await CreateActivityAsync(organizer);
+        await organizer.AcceptAsync(await applicant.ApplySuccessfullyAsync(activityId));
+
+        var activity = await applicant.GetActivityAsync(activityId);
+
+        Assert.Equal(LieuUniqueAddress, activity.ExactLocation?.Address);
+    }
+
+    [Fact]
+    public async Task GetActivity_AsRefusedApplicant_HidesExactLocation()
+    {
+        var organizer = await _auth.CreateSignedInClientWithProfileAsync();
+        var applicant = await _auth.CreateSignedInClientWithProfileAsync(firstName: "Léa");
+        var activityId = await CreateActivityAsync(organizer);
+        await organizer.RefuseAsync(await applicant.ApplySuccessfullyAsync(activityId));
+
+        var activity = await applicant.GetActivityAsync(activityId);
+
+        Assert.Null(activity.ExactLocation);
+    }
+
+    [Fact]
     public async Task GetActivity_WithUnknownId_ReturnsNotFound()
     {
         var client = await _auth.CreateSignedInClientWithProfileAsync();

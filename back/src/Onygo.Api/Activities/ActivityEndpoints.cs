@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using Onygo.Api.Applications;
 using Onygo.Api.Common;
 using Onygo.Api.Infrastructure.Persistence;
 using Onygo.Api.Profiles;
@@ -29,10 +30,7 @@ public static class ActivityEndpoints
         var organizer = await dbContext.Profiles.FindAsync(user.UserId());
         if (organizer is null)
         {
-            return TypedResults.Problem(
-                statusCode: StatusCodes.Status403Forbidden,
-                title: "A profile is required to create an activity.",
-                extensions: new Dictionary<string, object?> { ["code"] = ActivityErrorCodes.ProfileRequired });
+            return BusinessProblem.Forbidden(ActivityErrorCodes.ProfileRequired);
         }
 
         var errors = ActivityValidation.ValidateCreation(request, clock.GetUtcNow());
@@ -45,7 +43,7 @@ public static class ActivityEndpoints
         dbContext.Activities.Add(activity);
         await dbContext.SaveChangesAsync();
 
-        var response = ToResponse(new ActivityWithOrganizer(activity, organizer), organizer.UserId, clock);
+        var response = ToResponse(new ActivityWithOrganizer(activity, organizer), canSeeExactLocation: true, clock);
         return TypedResults.Created($"/activities/{activity.Id}", response);
     }
 
@@ -61,7 +59,13 @@ public static class ActivityEndpoints
             where activity.Id == id
             select new ActivityWithOrganizer(activity, organizer)).SingleOrDefaultAsync();
 
-        return found is null ? TypedResults.NotFound() : TypedResults.Ok(ToResponse(found, user.UserId(), clock));
+        if (found is null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        var canSeeExactLocation = await CanSeeExactLocationAsync(dbContext, found.Activity, user.UserId());
+        return TypedResults.Ok(ToResponse(found, canSeeExactLocation, clock));
     }
 
     // Appelé après validation : les champs obligatoires sont présents.
@@ -86,7 +90,7 @@ public static class ActivityEndpoints
         };
     }
 
-    private static ActivityResponse ToResponse(ActivityWithOrganizer found, string viewerId, TimeProvider clock)
+    private static ActivityResponse ToResponse(ActivityWithOrganizer found, bool canSeeExactLocation, TimeProvider clock)
     {
         var (activity, organizer) = found;
         return new ActivityResponse(
@@ -101,14 +105,19 @@ public static class ActivityEndpoints
                 activity.PublicAreaCenter.Latitude,
                 activity.PublicAreaCenter.Longitude,
                 ActivityRules.PublicAreaRadiusMeters),
-            CanSeeExactLocation(activity, viewerId) ? ToExactLocation(activity.Location) : null,
+            canSeeExactLocation ? ToExactLocation(activity.Location) : null,
             new OrganizerResponse(
                 organizer.FirstName,
                 ProfileRules.AgeOn(organizer.BirthDate, ParisCalendar.Today(clock))));
     }
 
-    // Pour l'instant seul l'organisateur ; la personne acceptée y aura droit avec les candidatures.
-    private static bool CanSeeExactLocation(Activity activity, string viewerId) => activity.OrganizerId == viewerId;
+    /// <summary>Le lieu exact n'est connu que de l'organisateur et, après le match, de la personne acceptée.</summary>
+    private static async Task<bool> CanSeeExactLocationAsync(OnygoDbContext dbContext, Activity activity, string viewerId) =>
+        activity.OrganizerId == viewerId
+        || await dbContext.Applications.AnyAsync(application =>
+            application.ActivityId == activity.Id
+            && application.ApplicantId == viewerId
+            && application.Status == ApplicationStatus.Accepted);
 
     private static ExactLocationResponse ToExactLocation(ActivityLocation location) =>
         new(location.Address, location.Latitude, location.Longitude);

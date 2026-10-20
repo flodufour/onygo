@@ -312,6 +312,44 @@ namespace Onygo.Api.Infrastructure.Persistence.Migrations
                     b.ToTable("Activities");
                 });
 
+            modelBuilder.Entity("Onygo.Api.Applications.ActivityApplication", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ActivityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ApplicantId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("AppliedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityId", "ApplicantId")
+                        .IsUnique();
+
+                    b.HasIndex("ApplicantId", "AppliedAt");
+
+                    b.ToTable("ActivityApplications", (string)null);
+                });
+
             modelBuilder.Entity("Onygo.Api.Profiles.Profile", b =>
                 {
                     b.Property<string>("UserId")
@@ -386,6 +424,21 @@ namespace Onygo.Api.Infrastructure.Persistence.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("OrganizerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Onygo.Api.Applications.ActivityApplication", b =>
+                {
+                    b.HasOne("Onygo.Api.Activities.Activity", null)
+                        .WithMany()
+                        .HasForeignKey("ActivityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("ApplicantId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
