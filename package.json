@@ -1,0 +1,10 @@
+{
+  "name": "onygo",
+  "private": true,
+  "workspaces": [
+    "front/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  }
+}
