@@ -50,9 +50,22 @@ Options : e-mail unique, **connexion refusée tant que l'e-mail n'est pas confir
 
 **Politique de repli** : toute route exige un utilisateur connecté par défaut. Une route publique doit le dire explicitement avec `.AllowAnonymous()`. Une route inconnue appelée sans jeton répond donc 401, pas 404.
 
-Routes publiques aujourd'hui : `/health`, les routes `/auth/*` sauf `/auth/manage/*`, et en développement `/openapi/v1.json` et Swagger UI.
+Routes publiques aujourd'hui : `/health`, les routes `/auth/*` sauf `/auth/manage/*`, et en développement `/openapi/v1.json` et Swagger UI. Côté `/auth`, c'est la convention `OpenAndRateLimitPublicRoute` (`Auth/AuthSetup.cs`) qui ouvre les routes sans exigence d'autorisation.
 
 `UseAuthentication()` et `UseAuthorization()` sont appelés explicitement **après** `UseSwaggerUI()` : Swagger UI sert des fichiers via un middleware, pas via une route, et serait sinon bloqué.
+
+## Limitation du nombre de requêtes
+
+Sur les routes publiques `/auth/*`, par adresse IP (`Auth/AuthRateLimiting.cs`), réponse **429** au-delà :
+
+| Quota | Routes | Défaut | Clé de configuration |
+|---|---|---|---|
+| connexion | login, register, refresh, resetPassword, confirmEmail | 20 / minute | `RateLimiting:Auth:SignInPermitsPerMinute` |
+| e-mails | forgotPassword, resendConfirmationEmail | 5 / heure | `RateLimiting:Auth:EmailPermitsPerHour` |
+
+- Valeurs larges exprès : tout un campus peut partager la même IP publique (Wi-Fi).
+- **À faire avec l'hébergement** : configurer `ForwardedHeaders`, sinon l'API voit l'IP du proxy et tout le monde partage le même quota.
+- Tests : `OnygoApiFactory` lève les limites (tous les tests ont la même IP) ; `RateLimitingTests` les abaisse avec `WithWebHostBuilder`.
 
 ## E-mails
 
