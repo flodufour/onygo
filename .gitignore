@@ -1,0 +1,39 @@
+# Secrets et environnements locaux
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+npm-debug.log*
+coverage/
+
+# Expo / React Native
+.expo/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# .NET
+bin/
+obj/
+*.user
+TestResults/
+
+# IDE et système
+.vs/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
