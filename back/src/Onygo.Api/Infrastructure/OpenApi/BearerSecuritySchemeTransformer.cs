@@ -21,7 +21,7 @@ public sealed class BearerSecuritySchemeTransformer : IOpenApiDocumentTransforme
         {
             Type = SecuritySchemeType.Http,
             Scheme = "bearer",
-            Description = "accessToken renvoyé par /login (jeton opaque, pas un JWT).",
+            Description = "accessToken renvoyé par /auth/login (jeton opaque, pas un JWT).",
         };
 
         document.Security ??= [];

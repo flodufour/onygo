@@ -28,18 +28,18 @@ On utilise les **Identity API endpoints** de Microsoft (`AddIdentityApiEndpoints
 
 | Route | Usage |
 |---|---|
-| `POST /register` | inscription (`email`, `password`), envoie le lien de confirmation |
-| `GET /confirmEmail` | lien reçu par e-mail |
-| `POST /resendConfirmationEmail` | renvoyer le lien |
-| `POST /login` | renvoie `accessToken`, `refreshToken`, `expiresIn` |
-| `POST /refresh` | nouveau couple de jetons à partir du `refreshToken` |
-| `POST /forgotPassword` | envoie un **code** de réinitialisation |
-| `POST /resetPassword` | `email`, `resetCode`, `newPassword` |
-| `GET/POST /manage/info` | infos du compte connecté |
+| `POST /auth/register` | inscription (`email`, `password`), envoie le lien de confirmation |
+| `GET /auth/confirmEmail` | lien reçu par e-mail |
+| `POST /auth/resendConfirmationEmail` | renvoyer le lien |
+| `POST /auth/login` | renvoie `accessToken`, `refreshToken`, `expiresIn` |
+| `POST /auth/refresh` | nouveau couple de jetons à partir du `refreshToken` |
+| `POST /auth/forgotPassword` | envoie un **code** de réinitialisation |
+| `POST /auth/resetPassword` | `email`, `resetCode`, `newPassword` |
+| `GET/POST /auth/manage/info` | infos du compte connecté |
 
 Options : e-mail unique, **connexion refusée tant que l'e-mail n'est pas confirmé**, politique de mot de passe par défaut d'Identity (6 caractères minimum, majuscule, minuscule, chiffre, caractère spécial).
 
-Les routes `/manage/2fa` sont aussi exposées par `MapIdentityApi`, mais la 2FA ne fait pas partie du périmètre.
+Les routes `/auth/manage/2fa` sont aussi exposées par `MapIdentityApi`, mais la 2FA ne fait pas partie du périmètre.
 
 ## E-mails
 
@@ -66,7 +66,7 @@ dotnet format --verify-no-changes                     # vérification avant PR
 ```
 
 En développement uniquement :
-- **Swagger UI** sur http://localhost:5100/swagger : appeler `/login`, copier l'`accessToken`, puis **Authorize** pour tester les routes protégées
+- **Swagger UI** sur http://localhost:5100/swagger : appeler `/auth/login`, copier l'`accessToken`, puis **Authorize** pour tester les routes protégées
 - document OpenAPI sur `/openapi/v1.json` (généré par `Microsoft.AspNetCore.OpenApi`, source du client `@onygo/shared`) ; le schéma Bearer y est déclaré par `BearerSecuritySchemeTransformer`
 
 ## Tests d'intégration

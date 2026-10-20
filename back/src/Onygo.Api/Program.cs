@@ -42,7 +42,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "Onygo API"));
 }
 
-app.MapIdentityApi<IdentityUser>();
+app.MapGroup("/auth").WithTags("Auth").MapIdentityApi<IdentityUser>();
 app.MapHealthChecks("/health");
 
 app.Run();

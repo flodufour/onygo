@@ -16,26 +16,26 @@ public sealed class AuthApiClient(OnygoApiFactory factory)
     public static string NewEmail() => $"user-{Guid.NewGuid():N}@onygo.test";
 
     public Task<HttpResponseMessage> RegisterAsync(string email, string password = ValidPassword) =>
-        Http.PostAsJsonAsync("/register", new { email, password });
+        Http.PostAsJsonAsync("/auth/register", new { email, password });
 
     public Task<HttpResponseMessage> ConfirmEmailAsync(string email) =>
         Http.GetAsync(factory.EmailSender.ConfirmationLinkSentTo(email));
 
     public Task<HttpResponseMessage> LoginAsync(string email, string password = ValidPassword) =>
-        Http.PostAsJsonAsync("/login", new { email, password });
+        Http.PostAsJsonAsync("/auth/login", new { email, password });
 
     public Task<HttpResponseMessage> RefreshAsync(string refreshToken) =>
-        Http.PostAsJsonAsync("/refresh", new { refreshToken });
+        Http.PostAsJsonAsync("/auth/refresh", new { refreshToken });
 
     public Task<HttpResponseMessage> ForgotPasswordAsync(string email) =>
-        Http.PostAsJsonAsync("/forgotPassword", new { email });
+        Http.PostAsJsonAsync("/auth/forgotPassword", new { email });
 
     public Task<HttpResponseMessage> ResetPasswordAsync(string email, string resetCode, string newPassword) =>
-        Http.PostAsJsonAsync("/resetPassword", new { email, resetCode, newPassword });
+        Http.PostAsJsonAsync("/auth/resetPassword", new { email, resetCode, newPassword });
 
     public Task<HttpResponseMessage> GetAccountInfoAsync(string? accessToken)
     {
-        var request = new HttpRequestMessage(HttpMethod.Get, "/manage/info");
+        var request = new HttpRequestMessage(HttpMethod.Get, "/auth/manage/info");
         if (accessToken is not null)
         {
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
