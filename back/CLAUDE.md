@@ -41,6 +41,14 @@ Options : e-mail unique, **connexion refusée tant que l'e-mail n'est pas confir
 
 Les routes `/auth/manage/2fa` sont aussi exposées par `MapIdentityApi`, mais la 2FA ne fait pas partie du périmètre.
 
+## Autorisation
+
+**Politique de repli** : toute route exige un utilisateur connecté par défaut. Une route publique doit le dire explicitement avec `.AllowAnonymous()`. Une route inconnue appelée sans jeton répond donc 401, pas 404.
+
+Routes publiques aujourd'hui : `/health`, les routes `/auth/*` sauf `/auth/manage/*`, et en développement `/openapi/v1.json` et Swagger UI.
+
+`UseAuthentication()` et `UseAuthorization()` sont appelés explicitement **après** `UseSwaggerUI()` : Swagger UI sert des fichiers via un middleware, pas via une route, et serait sinon bloqué.
+
 ## E-mails
 
 Le fournisseur n'est pas encore choisi (décision ouverte). En attendant :
