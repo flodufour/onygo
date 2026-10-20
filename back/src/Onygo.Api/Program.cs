@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Onygo.Api.Infrastructure.Email;
+using Onygo.Api.Infrastructure.OpenApi;
 using Onygo.Api.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,7 +31,7 @@ else
     builder.Services.AddSingleton<IEmailSender<IdentityUser>, UnconfiguredEmailSender>();
 }
 
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
@@ -38,6 +39,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "Onygo API"));
 }
 
 app.MapIdentityApi<IdentityUser>();

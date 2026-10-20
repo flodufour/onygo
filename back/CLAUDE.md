@@ -12,7 +12,8 @@ back/
 │   ├── Program.cs                    # configuration des services et des routes
 │   └── Infrastructure/
 │       ├── Persistence/              # OnygoDbContext et migrations EF Core
-│       └── Email/                    # implémentations de IEmailSender<IdentityUser>
+│       ├── Email/                    # implémentations de IEmailSender<IdentityUser>
+│       └── OpenApi/                  # personnalisation du document OpenAPI
 └── tests/
     ├── Onygo.Api.UnitTests/          # logique pure, sans base ni réseau
     └── Onygo.Api.IntegrationTests/   # HTTP → vrai PostgreSQL (Testcontainers) → réponse
@@ -64,7 +65,9 @@ dotnet format                                         # à lancer après chaque 
 dotnet format --verify-no-changes                     # vérification avant PR
 ```
 
-En développement, le document OpenAPI est servi sur `/openapi/v1.json` (source du client `@onygo/shared`).
+En développement uniquement :
+- **Swagger UI** sur http://localhost:5100/swagger : appeler `/login`, copier l'`accessToken`, puis **Authorize** pour tester les routes protégées
+- document OpenAPI sur `/openapi/v1.json` (généré par `Microsoft.AspNetCore.OpenApi`, source du client `@onygo/shared`) ; le schéma Bearer y est déclaré par `BearerSecuritySchemeTransformer`
 
 ## Tests d'intégration
 
