@@ -18,6 +18,7 @@ builder.Services.AddAuthorizationBuilder()
 builder.Services
     .AddIdentityApiEndpoints<IdentityUser>(options =>
     {
+        options.Password.RequiredLength = 8;
         options.User.RequireUniqueEmail = true;
         options.SignIn.RequireConfirmedEmail = true;
     })

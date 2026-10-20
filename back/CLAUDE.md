@@ -37,7 +37,7 @@ On utilise les **Identity API endpoints** de Microsoft (`AddIdentityApiEndpoints
 | `POST /auth/resetPassword` | `email`, `resetCode`, `newPassword` |
 | `GET/POST /auth/manage/info` | infos du compte connecté |
 
-Options : e-mail unique, **connexion refusée tant que l'e-mail n'est pas confirmé**, politique de mot de passe par défaut d'Identity (6 caractères minimum, majuscule, minuscule, chiffre, caractère spécial).
+Options : e-mail unique, **connexion refusée tant que l'e-mail n'est pas confirmé**, mot de passe de **8 caractères minimum** avec majuscule, minuscule, chiffre et caractère spécial (règles par défaut d'Identity, longueur relevée).
 
 Les routes `/auth/manage/2fa` sont aussi exposées par `MapIdentityApi`, mais la 2FA ne fait pas partie du périmètre.
 

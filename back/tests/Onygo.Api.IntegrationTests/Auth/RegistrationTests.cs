@@ -30,6 +30,14 @@ public class RegistrationTests(OnygoApiFactory factory)
     }
 
     [Fact]
+    public async Task Register_WithSevenCharacterPassword_ReturnsBadRequest()
+    {
+        var response = await _auth.RegisterAsync(AuthApiClient.NewEmail(), password: "Ony-g0!");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Register_WithWeakPassword_ReturnsBadRequest()
     {
         var response = await _auth.RegisterAsync(AuthApiClient.NewEmail(), password: "weak");
