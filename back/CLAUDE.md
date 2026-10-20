@@ -9,7 +9,8 @@ back/
 ├── Onygo.slnx
 ├── dotnet-tools.json                 # outil local dotnet-ef
 ├── src/Onygo.Api/
-│   ├── Program.cs                    # configuration des services et des routes
+│   ├── Program.cs                    # assemblage des services et des routes
+│   ├── Auth/                         # configuration Identity, Bearer, politique de repli
 │   └── Infrastructure/
 │       ├── Persistence/              # OnygoDbContext et migrations EF Core
 │       ├── Email/                    # implémentations de IEmailSender<IdentityUser>
@@ -24,7 +25,9 @@ Les tests reprennent l'arborescence de `src/` (ex. `Infrastructure/Email/Develop
 
 ## Authentification
 
-On utilise les **Identity API endpoints** de Microsoft (`AddIdentityApiEndpoints` + `MapIdentityApi`), sans surcouche maison. Jetons Bearer **opaques** (pas de JWT) : accès 1 h, refresh 14 jours (valeurs par défaut).
+On utilise les **Identity API endpoints** de Microsoft (`MapIdentityApi`), sans surcouche maison, configurés dans `Auth/AuthSetup.cs`. Jetons Bearer **opaques** (pas de JWT) : accès 1 h, refresh 14 jours (valeurs par défaut).
+
+**Bearer uniquement** : Identity est enregistré avec `AddIdentityCore` + `AddApiEndpoints` + `AddBearerToken`, sans les cookies qu'ajouterait `AddIdentityApiEndpoints`.
 
 | Route | Usage |
 |---|---|
@@ -39,7 +42,9 @@ On utilise les **Identity API endpoints** de Microsoft (`AddIdentityApiEndpoints
 
 Options : e-mail unique, **connexion refusée tant que l'e-mail n'est pas confirmé**, mot de passe de **8 caractères minimum** avec majuscule, minuscule, chiffre et caractère spécial (règles par défaut d'Identity, longueur relevée).
 
-Les routes `/auth/manage/2fa` sont aussi exposées par `MapIdentityApi`, mais la 2FA ne fait pas partie du périmètre.
+`UnsupportedIdentityFeaturesFilter` ferme ce que `MapIdentityApi` expose sans qu'on s'en serve :
+- `?useCookies=true` ou `?useSessionCookies=true` sur `/auth/login` → **400**
+- `/auth/manage/2fa` → **404** (2FA hors périmètre)
 
 ## Autorisation
 
