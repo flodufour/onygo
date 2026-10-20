@@ -3,7 +3,7 @@
 Fichier de reprise : à lire en début de session, avec `CLAUDE.md` (règles métier et principes) et `back/CLAUDE.md` (détails techniques de l'API).
 Il ne répète pas les règles : il dit **ce qui est fait, ce qui reste, dans quel ordre, et ce qui attend une décision**.
 
-> Dernière mise à jour : 20 octobre 2026 — `main` au commit `0baa32e` (après la fusion des candidatures).
+> Dernière mise à jour : 20 octobre 2026 — feed fusionné dans `main`.
 
 ---
 
@@ -42,7 +42,7 @@ dotnet test                                            # 181 tests, Docker requi
 
 Chaque étape = une branche `feat/…`, tests écrits avec le code, fusion dans `main` après validation.
 
-### ~~Étape 1 — Feed~~ ✅ fait (`feat/feed`)
+### ~~Étape 1 — Feed~~ ✅ fait, fusionné dans `main`
 
 Reste hors étape : blocage entre utilisateurs (MVP), filtre par distance (MVP).
 
