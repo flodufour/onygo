@@ -119,14 +119,15 @@ Règles métier R1 à R11 : `CLAUDE.md` racine §2.4. Table `ActivityApplication
 - **Concurrence** : les comptages (R1, R6) et la décision (R4) se font dans une transaction, sous verrou de ligne `FOR UPDATE` sur l'activité et, pour postuler, sur l'utilisateur. Une décision relit la candidature **après** avoir pris le verrou. Les tests `ApplicationConcurrencyTests` envoient de vraies requêtes simultanées et échouent si on retire les verrous.
 - **R9** : le candidat ne reçoit jamais `ApplicationStatus` mais `MyApplicationStatus` (`Pending` / `Accepted` uniquement) ; une conversion d'un autre statut lève une exception plutôt que de fuiter.
 - **Erreurs métier** : `BusinessProblem` (`Common/`) → ProblemDetails avec `code` ; 403 pour les droits (`NotOrganizer`, `CannotApplyToOwnActivity`, `ProfileRequired`), 409 pour les états (`ActivityFull`, `AlreadyApplied`…).
-- **R5 (expiration automatique) n'est pas encore implémentée** : tâche de fond à venir.
+- **R5 (expiration)** : `ExpirationService.ExpireOverdueAsync` passe en `Expired` les activités `Open` et les candidatures `Pending` qui commencent dans 1 h ou moins (`ActivityRules.ApplicationsCloseBeforeStart`). Deux `UPDATE` dans une transaction, activités d'abord (attend les verrous des candidatures et acceptations en cours) : idempotent, sûr avec plusieurs instances. `ExpirationWorker` (`BackgroundService`) l'appelle **chaque minute** via un `PeriodicTimer` sur l'horloge injectée ; une erreur est journalisée et le passage suivant réessaie. Les tests appellent le service directement (`factory.RunExpirationAsync()`), jamais la tâche de fond.
+- Après la fermeture (1 h avant), postuler ou accepter renvoie `ApplicationsClosed` ; refuser reste possible tant que la candidature est en attente.
 
 ## Heure et dates
 
 - L'horloge est injectée (`TimeProvider`, enregistré dans `Program.cs`) ; ne jamais utiliser `DateTime.Now` / `UtcNow`.
 - Les règles calendaires se comptent en heure de Paris : `ParisCalendar.Today(clock)`.
 - Les instants sont stockés en UTC (`timestamptz`, Npgsql refuse un autre décalage) : `ToUniversalTime()` avant d'enregistrer une date reçue.
-- Tests : `FakeTimeProvider`. Dans les tests d'intégration, l'API voit le **15 juin 2026, 10 h à Paris** (`OnygoApiFactory.Now`, en UTC, et `Today`). L'horloge est partagée : ne jamais l'avancer dans un test ; pour une activité déjà commencée ou une candidature d'hier, modifier la base avec `factory.WithDatabaseAsync`.
+- Tests : `FakeTimeProvider`. Dans les tests d'intégration, l'API voit le **15 juin 2026, 10 h à Paris** (`OnygoApiFactory.Now`, en UTC, et `Today`). L'horloge est partagée : ne jamais l'avancer dans un test ; pour une activité proche ou passée ou une candidature d'hier, modifier la base (`factory.SetActivityStartAsync`, `factory.WithDatabaseAsync`).
 
 ## E-mails
 

@@ -40,7 +40,7 @@ public static class ApplicationErrorCodes
     public const string MessageTooLong = "MessageTooLong";
     public const string CannotApplyToOwnActivity = "CannotApplyToOwnActivity";
     public const string ActivityNotOpen = "ActivityNotOpen";
-    public const string ActivityAlreadyStarted = "ActivityAlreadyStarted";
+    public const string ApplicationsClosed = "ApplicationsClosed";
     public const string AlreadyApplied = "AlreadyApplied";
     public const string ActivityFull = "ActivityFull";
     public const string DailyApplicationLimitReached = "DailyApplicationLimitReached";

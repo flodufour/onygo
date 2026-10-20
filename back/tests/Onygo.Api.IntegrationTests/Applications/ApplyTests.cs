@@ -165,20 +165,18 @@ public class ApplyTests(OnygoApiFactory factory)
         await response.AssertBusinessErrorAsync(HttpStatusCode.Conflict, ApplicationErrorCodes.ActivityNotOpen);
     }
 
-    // R8
+    // R5 / R8 : les candidatures ferment 1 h avant le début.
     [Fact]
-    public async Task Apply_ToActivityThatAlreadyStarted_ReturnsActivityAlreadyStarted()
+    public async Task Apply_1HourBeforeStart_ReturnsApplicationsClosed()
     {
         var organizer = await _auth.CreateSignedInClientWithProfileAsync();
         var applicant = await _auth.CreateSignedInClientWithProfileAsync(firstName: "Léa");
         var activity = await organizer.CreateActivityAsync(AValidActivity());
-        await factory.WithDatabaseAsync(db => db.Activities
-            .Where(a => a.Id == activity.Id)
-            .ExecuteUpdateAsync(setters => setters.SetProperty(a => a.StartsAt, OnygoApiFactory.Now.AddMinutes(-5))));
+        await factory.SetActivityStartAsync(activity.Id, OnygoApiFactory.Now.AddHours(1));
 
         var response = await applicant.ApplyAsync(activity.Id);
 
-        await response.AssertBusinessErrorAsync(HttpStatusCode.Conflict, ApplicationErrorCodes.ActivityAlreadyStarted);
+        await response.AssertBusinessErrorAsync(HttpStatusCode.Conflict, ApplicationErrorCodes.ApplicationsClosed);
     }
 
     // R6

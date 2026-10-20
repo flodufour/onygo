@@ -67,14 +67,25 @@ public class ApplicationRulesTests
         Assert.Equal(ApplicationErrorCodes.ActivityNotOpen, error);
     }
 
+    // R5 : les candidatures ferment 1 h avant le début.
     [Fact]
-    public void CheckCanApply_ToActivityStartingNow_ReturnsActivityAlreadyStarted()
+    public void CheckCanApply_Exactly1HourBeforeStart_ReturnsApplicationsClosed()
     {
-        var activity = AnOpenActivity(startsAt: Now);
+        var activity = AnOpenActivity(startsAt: Now.AddHours(1));
 
         var error = ApplicationRules.CheckCanApply(AValidApplyCheck() with { Activity = activity });
 
-        Assert.Equal(ApplicationErrorCodes.ActivityAlreadyStarted, error);
+        Assert.Equal(ApplicationErrorCodes.ApplicationsClosed, error);
+    }
+
+    [Fact]
+    public void CheckCanApply_1HourAnd1MinuteBeforeStart_ReturnsNull()
+    {
+        var activity = AnOpenActivity(startsAt: Now.AddHours(1).AddMinutes(1));
+
+        var error = ApplicationRules.CheckCanApply(AValidApplyCheck() with { Activity = activity });
+
+        Assert.Null(error);
     }
 
     [Fact]
@@ -144,14 +155,15 @@ public class ApplicationRulesTests
         Assert.Equal(ApplicationErrorCodes.ApplicationNotPending, error);
     }
 
+    // R5 : une candidature acceptée moins d'1 h avant le début aurait déjà dû expirer.
     [Fact]
-    public void CheckCanDecide_AcceptanceAfterActivityStarted_ReturnsActivityAlreadyStarted()
+    public void CheckCanDecide_AcceptanceExactly1HourBeforeStart_ReturnsApplicationsClosed()
     {
-        var check = AnAcceptanceByTheOrganizer() with { Now = Now.AddDays(2) };
+        var check = AnAcceptanceByTheOrganizer() with { Now = Now.AddDays(1).AddHours(-1) };
 
         var error = ApplicationRules.CheckCanDecide(check);
 
-        Assert.Equal(ApplicationErrorCodes.ActivityAlreadyStarted, error);
+        Assert.Equal(ApplicationErrorCodes.ApplicationsClosed, error);
     }
 
     [Fact]

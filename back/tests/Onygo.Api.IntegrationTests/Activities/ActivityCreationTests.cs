@@ -61,6 +61,18 @@ public class ActivityCreationTests(OnygoApiFactory factory)
         await AssertValidationErrorAsync(response, "startsAt", ActivityErrorCodes.StartsAtInPast);
     }
 
+    // R5 : les candidatures fermant 1 h avant le début, personne ne pourrait y postuler.
+    [Fact]
+    public async Task CreateActivity_StartingIn1Hour_ReturnsStartsAtTooSoon()
+    {
+        var client = await _auth.CreateSignedInClientWithProfileAsync();
+        var request = AValidActivity() with { StartsAt = OnygoApiFactory.Now.AddHours(1) };
+
+        var response = await client.PostAsJsonAsync("/activities", request, TestJson.Options);
+
+        await AssertValidationErrorAsync(response, "startsAt", ActivityErrorCodes.StartsAtTooSoon);
+    }
+
     [Fact]
     public async Task CreateActivity_Exactly30DaysAhead_ReturnsCreated()
     {

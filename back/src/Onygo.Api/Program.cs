@@ -33,6 +33,9 @@ else
     builder.Services.AddSingleton<IEmailSender<IdentityUser>, UnconfiguredEmailSender>();
 }
 
+builder.Services.AddScoped<ExpirationService>();
+builder.Services.AddHostedService<ExpirationWorker>();
+
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 builder.Services.AddHealthChecks();
 

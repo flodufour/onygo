@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Time.Testing;
+using Onygo.Api.Applications;
 using Onygo.Api.Infrastructure.Persistence;
 using Testcontainers.PostgreSql;
 
@@ -48,6 +49,19 @@ public sealed class OnygoApiFactory : WebApplicationFactory<Program>, IAsyncLife
     {
         await using var scope = Services.CreateAsyncScope();
         return await action(scope.ServiceProvider.GetRequiredService<OnygoDbContext>());
+    }
+
+    /// <summary>Change la date d'une activité, y compris vers un moment que l'API refuserait à la création.</summary>
+    public Task SetActivityStartAsync(Guid activityId, DateTimeOffset startsAt) =>
+        WithDatabaseAsync(db => db.Activities
+            .Where(activity => activity.Id == activityId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(activity => activity.StartsAt, startsAt.ToUniversalTime())));
+
+    /// <summary>Lance un passage d'expiration (R5) comme le ferait la tâche de fond.</summary>
+    public async Task<ExpirationResult> RunExpirationAsync()
+    {
+        await using var scope = Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<ExpirationService>().ExpireOverdueAsync();
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
