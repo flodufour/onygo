@@ -73,4 +73,12 @@ public sealed class AuthApiClient(OnygoApiFactory factory, HttpClient http)
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
         return client;
     }
+
+    /// <summary>Client HTTP d'un nouvel utilisateur connecté qui a déjà créé son profil.</summary>
+    public async Task<HttpClient> CreateSignedInClientWithProfileAsync(string firstName = "Camille", int age = 25)
+    {
+        var client = await CreateSignedInClientAsync();
+        await client.CreateProfileAsync(firstName, age);
+        return client;
+    }
 }

@@ -12,7 +12,8 @@ back/
 │   ├── Program.cs                    # assemblage des services et des routes
 │   ├── Auth/                         # configuration Identity, Bearer, politique de repli
 │   ├── Profiles/                     # profil : entité, règles, validation, routes
-│   ├── Common/                       # outils transverses (ParisCalendar)
+│   ├── Activities/                   # activités : entité, règles, validation, routes
+│   ├── Common/                       # outils transverses (ParisCalendar, GeoPoint, UserId())
 │   └── Infrastructure/
 │       ├── Persistence/              # OnygoDbContext et migrations EF Core
 │       ├── Email/                    # implémentations de IEmailSender<IdentityUser>
@@ -84,11 +85,26 @@ Profil de l'utilisateur connecté, table `Profiles` (clé = `UserId`, supprimée
 - Prénom obligatoire, nettoyé des espaces, 50 caractères maximum.
 - Erreurs : `ValidationProblem` (400) avec un **code** par champ (`ProfileErrorCodes`), à traduire côté front.
 
+## Activités
+
+Règles métier : voir `CLAUDE.md` racine §2.3. Table `Activities` (id `Guid` v7, statut et type stockés en texte).
+
+| Route | Usage |
+|---|---|
+| `POST /activities` | création → 201 ; 403 `ProfileRequired` sans profil ; 400 `ValidationProblem` sinon |
+| `GET /activities/{id}` | détail avec prénom et âge de l'organisateur ; 404 si inconnue |
+
+- `exactLocation` (adresse + coordonnées) n'est rempli que si `CanSeeExactLocation` l'autorise (aujourd'hui : l'organisateur). **Toute nouvelle route qui renvoie une activité doit passer par ce même contrôle.**
+- `publicArea` : centre décalé (`ActivityRules.DrawPublicAreaCenter`, `RandomNumberGenerator`) **stocké** dans `PublicAreaCenter_*`, rayon `PublicAreaRadiusMeters` (5 km). Ne jamais le recalculer à l'affichage.
+- Pas de suppression en cascade depuis le compte : à décider avec la suppression de compte (R10).
+- Les enums sont en texte dans le JSON (`JsonStringEnumConverter`) : les tests lisent les réponses avec `TestJson.Options`.
+
 ## Heure et dates
 
 - L'horloge est injectée (`TimeProvider`, enregistré dans `Program.cs`) ; ne jamais utiliser `DateTime.Now` / `UtcNow`.
 - Les règles calendaires se comptent en heure de Paris : `ParisCalendar.Today(clock)`.
-- Tests : `FakeTimeProvider`. Dans les tests d'intégration, l'API voit le **15 juin 2026, 10 h à Paris** (`OnygoApiFactory.Today`).
+- Les instants sont stockés en UTC (`timestamptz`, Npgsql refuse un autre décalage) : `ToUniversalTime()` avant d'enregistrer une date reçue.
+- Tests : `FakeTimeProvider`. Dans les tests d'intégration, l'API voit le **15 juin 2026, 10 h à Paris** (`OnygoApiFactory.Now` / `Today`).
 
 ## E-mails
 
@@ -123,4 +139,5 @@ En développement uniquement :
 
 - `OnygoApiFactory` démarre un conteneur `postgres:17-alpine`, applique les migrations et le partage avec toute la collection `Api` (`[Collection(ApiCollection.Name)]`).
 - L'isolation passe par les données : chaque test crée ses propres utilisateurs avec `AuthApiClient.NewEmail()`.
-- `AuthApiClient` appelle les routes comme le ferait un front (`RegisterConfirmedUserAsync`, `LoginConfirmedUserAsync`…).
+- `AuthApiClient` appelle les routes comme le ferait un front (`RegisterConfirmedUserAsync`, `CreateSignedInClientAsync`, `CreateSignedInClientWithProfileAsync`…).
+- Données de test : fabriques avec valeurs par défaut valides (`ActivityRequests.AValidActivity() with { … }`).
