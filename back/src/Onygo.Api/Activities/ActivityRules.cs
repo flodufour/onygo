@@ -22,7 +22,18 @@ public static class ActivityRules
     public const int MinPublicAreaOffsetMeters = 1_000;
     public const int MaxPublicAreaOffsetMeters = 3_000;
 
+    /// <summary>
+    /// R5 : 2 h avant le début, les candidatures en attente expirent et l'activité ne peut plus être pourvue,
+    /// pour laisser à la personne acceptée le temps de s'organiser.
+    /// </summary>
+    public static readonly TimeSpan ApplicationsCloseBeforeStart = TimeSpan.FromHours(2);
+
     public static bool IsShortNotice(DateTimeOffset startsAt, DateTimeOffset now) => startsAt - now < ShortNoticeThreshold;
+
+    public static bool AreApplicationsClosed(DateTimeOffset startsAt, DateTimeOffset now) =>
+        now >= ApplicationsCloseAt(startsAt);
+
+    public static DateTimeOffset ApplicationsCloseAt(DateTimeOffset startsAt) => startsAt - ApplicationsCloseBeforeStart;
 
     /// <summary>
     /// Tire au hasard le centre du cercle public. À appeler une seule fois par activité et à stocker :

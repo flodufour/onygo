@@ -55,6 +55,7 @@ public static class ActivityErrorCodes
     public const string LongitudeInvalid = "LongitudeInvalid";
     public const string StartsAtRequired = "StartsAtRequired";
     public const string StartsAtInPast = "StartsAtInPast";
+    public const string StartsAtTooSoon = "StartsAtTooSoon";
     public const string StartsAtTooFarAhead = "StartsAtTooFarAhead";
     public const string InvalidCursor = "InvalidCursor";
     public const string LimitOutOfRange = "LimitOutOfRange";

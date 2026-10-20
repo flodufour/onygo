@@ -89,6 +89,10 @@ public static class ActivityValidation
         {
             errors["startsAt"] = [ActivityErrorCodes.StartsAtInPast];
         }
+        else if (ActivityRules.AreApplicationsClosed(startsAt.Value, now))
+        {
+            errors["startsAt"] = [ActivityErrorCodes.StartsAtTooSoon];
+        }
         else if (startsAt > now + ActivityRules.MaxSchedulingHorizon)
         {
             errors["startsAt"] = [ActivityErrorCodes.StartsAtTooFarAhead];

@@ -128,15 +128,14 @@ public class FeedTests(OnygoApiFactory factory)
         Assert.DoesNotContain(feed, a => a.Id == activity.Id);
     }
 
+    // R5 : plus possible d'y postuler.
     [Fact]
-    public async Task Feed_ExcludesActivityThatAlreadyStarted()
+    public async Task Feed_ExcludesActivityStartingWithin2Hours()
     {
         var organizer = await _auth.CreateSignedInClientWithProfileAsync();
         var viewer = await _auth.CreateSignedInClientWithProfileAsync(firstName: "Léa");
         var activity = await organizer.CreateActivityAsync(AValidActivity());
-        await factory.WithDatabaseAsync(db => db.Activities
-            .Where(a => a.Id == activity.Id)
-            .ExecuteUpdateAsync(setters => setters.SetProperty(a => a.StartsAt, OnygoApiFactory.Now.AddMinutes(-5))));
+        await factory.SetActivityStartAsync(activity.Id, OnygoApiFactory.Now.AddHours(2));
 
         var feed = await viewer.ReadWholeFeedAsync();
 

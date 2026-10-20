@@ -129,20 +129,19 @@ public class DecisionTests(OnygoApiFactory factory)
         await response.AssertBusinessErrorAsync(HttpStatusCode.Conflict, ApplicationErrorCodes.ApplicationNotPending);
     }
 
+    // R5 : la candidature aurait déjà dû expirer.
     [Fact]
-    public async Task Accept_AfterActivityStarted_ReturnsActivityAlreadyStarted()
+    public async Task Accept_2HoursBeforeStart_ReturnsApplicationsClosed()
     {
         var organizer = await _auth.CreateSignedInClientWithProfileAsync();
         var applicant = await _auth.CreateSignedInClientWithProfileAsync(firstName: "Léa");
         var activity = await organizer.CreateActivityAsync(AValidActivity());
         var applicationId = await applicant.ApplySuccessfullyAsync(activity.Id);
-        await factory.WithDatabaseAsync(db => db.Activities
-            .Where(a => a.Id == activity.Id)
-            .ExecuteUpdateAsync(setters => setters.SetProperty(a => a.StartsAt, OnygoApiFactory.Now.AddMinutes(-5))));
+        await factory.SetActivityStartAsync(activity.Id, OnygoApiFactory.Now.AddHours(2));
 
         var response = await organizer.AcceptAsync(applicationId);
 
-        await response.AssertBusinessErrorAsync(HttpStatusCode.Conflict, ApplicationErrorCodes.ActivityAlreadyStarted);
+        await response.AssertBusinessErrorAsync(HttpStatusCode.Conflict, ApplicationErrorCodes.ApplicationsClosed);
     }
 
     [Fact]

@@ -21,4 +21,20 @@ public class ActivityRulesTests
 
         Assert.False(isShortNotice);
     }
+
+    [Fact]
+    public void AreApplicationsClosed_Exactly2HoursBeforeStart_ReturnsTrue()
+    {
+        var areClosed = ActivityRules.AreApplicationsClosed(startsAt: Now.AddHours(2), now: Now);
+
+        Assert.True(areClosed);
+    }
+
+    [Fact]
+    public void AreApplicationsClosed_2HoursAnd1MinuteBeforeStart_ReturnsFalse()
+    {
+        var areClosed = ActivityRules.AreApplicationsClosed(startsAt: Now.AddHours(2).AddMinutes(1), now: Now);
+
+        Assert.False(areClosed);
+    }
 }

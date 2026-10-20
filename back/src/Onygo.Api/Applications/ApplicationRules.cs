@@ -46,9 +46,9 @@ public static class ApplicationRules
             return ApplicationErrorCodes.ActivityNotOpen;
         }
 
-        if (activity.StartsAt <= check.Now)
+        if (ActivityRules.AreApplicationsClosed(activity.StartsAt, check.Now))
         {
-            return ApplicationErrorCodes.ActivityAlreadyStarted;
+            return ApplicationErrorCodes.ApplicationsClosed;
         }
 
         if (check.HasAlreadyApplied)
@@ -91,6 +91,8 @@ public static class ApplicationRules
             return ApplicationErrorCodes.ActivityNotOpen;
         }
 
-        return check.Activity.StartsAt <= check.Now ? ApplicationErrorCodes.ActivityAlreadyStarted : null;
+        return ActivityRules.AreApplicationsClosed(check.Activity.StartsAt, check.Now)
+            ? ApplicationErrorCodes.ApplicationsClosed
+            : null;
     }
 }

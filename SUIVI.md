@@ -15,7 +15,7 @@ cd back
 dotnet tool restore                                    # dotnet-ef
 dotnet ef database update --project src/Onygo.Api      # appliquer les migrations
 dotnet run --project src/Onygo.Api                     # http://localhost:5100/swagger
-dotnet test                                            # 181 tests, Docker requis
+dotnet test                                            # 193 tests, Docker requis
 ```
 
 - Si l'API tourne déjà pendant `dotnet test`, le build échoue (fichiers verrouillés) : lancer `dotnet test -c Release`.
@@ -35,6 +35,7 @@ dotnet test                                            # 181 tests, Docker requi
 | Activités | `POST /activities`, `GET /activities/{id}` : types fixes ou « autre », 30 jours max, lieu exact caché derrière un cercle de 5 km décalé |
 | Candidatures | postuler, trier (O / X), « mes candidatures » : R1 à R4 et R6 à R11, verrous contre la concurrence |
 | Feed | `GET /activities/feed` : critères du §2.5, tri par date, pagination par curseur, alerte délai court (R11) |
+| Expiration (R5) | 2 h avant le début : candidatures en attente et activités sans acceptation expirent (tâche de fond chaque minute) ; candidatures fermées, création au moins 2 h à l'avance |
 
 ---
 
@@ -46,15 +47,10 @@ Chaque étape = une branche `feat/…`, tests écrits avec le code, fusion dans 
 
 Reste hors étape : blocage entre utilisateurs (MVP), filtre par distance (MVP).
 
-### Étape 2 — Expiration automatique, R5 (`feat/expiration`)
+### ~~Étape 2 — Expiration automatique (R5)~~ ✅ fait (`feat/expiration`)
 
-- [ ] Tâche de fond (`BackgroundService`) qui tourne à intervalle régulier, avec l'horloge injectée
-- [ ] Candidatures `Pending` dont l'activité a commencé → `Expired`
-- [ ] Activités `Open` dont la date est passée → `Expired`
-- [ ] Logique dans une méthode appelable directement par les tests (pas de `sleep` dans les tests)
-- [ ] Idempotente et sûre avec plusieurs instances de l'API (`UPDATE … WHERE` simples)
-- [ ] Afficher aussi l'activité comme non pourvue côté organisateur (à préciser avec le front)
-- Question à trancher : « expirent **avant** la date » = au début de l'activité, ou X heures avant ?
+Décision prise : expiration **2 h avant le début** (règles mises à jour dans `CLAUDE.md` §2.3, §2.4, §2.5).
+Reste à préciser avec le front : comment l'organisateur voit une activité expirée sans personne.
 
 ### Étape 3 — Compléter le profil (`feat/profile-contact`)
 
@@ -107,7 +103,6 @@ Chat (SignalR), swipe animé, confirmation et rappels avant la sortie, notificat
 | Fournisseur d'e-mails | Brevo / Resend | tout environnement hors local |
 | Hébergement API + base | à choisir, UE obligatoire | déploiement |
 | Stockage des photos | Cloudflare R2 / Supabase Storage | photos |
-| Moment d'expiration R5 | au début de l'activité / X h avant | étape 2 |
 | Contact | obligatoire à la création du profil ou plus tard ; formats acceptés | étape 3 |
 | Suppression de compte | que deviennent activités et candidatures (R10, pas de cascade aujourd'hui) | suppression de compte |
 | Contrôleurs ou Minimal API | Minimal API retenu (`CLAUDE.md` §4.2) ; à rediscuter en équipe si besoin | — |

@@ -110,7 +110,8 @@ public static class ActivityEndpoints
             from activity in dbContext.Activities
             join organizer in dbContext.Profiles on activity.OrganizerId equals organizer.UserId
             where activity.Status == ActivityStatus.Open
-                && activity.StartsAt > now
+                // R5 : on ne montre pas une activité à laquelle on ne peut plus postuler.
+                && activity.StartsAt > now + ActivityRules.ApplicationsCloseBeforeStart
                 && activity.OrganizerId != viewerId
                 // R3 : une candidature, quel que soit son statut, retire l'activité du feed (un refusé ne la revoit pas).
                 && !dbContext.Applications.Any(application =>
